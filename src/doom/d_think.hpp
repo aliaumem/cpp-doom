@@ -44,16 +44,30 @@ typedef  void (*actionf_p3)(mobj_t *mo, player_t *player, pspdef_t *psp); // [cr
 
 union actionf_t
 {
-  actionf_v	acv;
-  actionf_p1	acp1;
-  actionf_p2	acp2;
-  actionf_p3	acp3; // [crispy] let pspr action pointers get called from mobj states
+    actionf_v	acv_;
+    actionf_p1	acp1_;
+    actionf_p2	acp2_;
+    actionf_p3	acp3_; // [crispy] let pspr action pointers get called from mobj states
+public:
 
-  actionf_t() : acv{nullptr} {}
-  actionf_t(actionf_v f) : acv{f} {}
-  actionf_t(actionf_p1 f) : acp1{f} {}
-  actionf_t(actionf_p2 f) : acp2{f} {}
-  actionf_t(actionf_p3 f) : acp3{f} {}
+    auto& acv() { return acv_; }
+    auto acv() const { return acv_; }
+    auto& acp1() { return acp1_; }
+    auto& acp2() { return acp2_; }
+    auto& acp3() { return acp3_; }
+
+    actionf_t(int f) : acv_{reinterpret_cast<actionf_v>(f)} {}
+    actionf_t() : acv_{nullptr} {}
+    actionf_t(actionf_v f) : acv_{f} {}
+    actionf_t(actionf_p1 f) : acp1_{f} {}
+    actionf_t(actionf_p2 f) : acp2_{f} {}
+    actionf_t(actionf_p3 f) : acp3_{f} {}
+
+    constexpr actionf_t& operator=(actionf_v const& f)
+    {
+        acv_ = f;
+        return *this;
+    }
 };
 
 

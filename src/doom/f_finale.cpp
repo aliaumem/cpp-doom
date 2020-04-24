@@ -482,8 +482,8 @@ static const actionsound_t actionsounds[] =
 // [crispy] play attack sound based on state action function (instead of state number)
 static int F_SoundForState (int st)
 {
-	void *const castaction = (void *) caststate->action.acv;
-	void *const nextaction = (void *) (&states[caststate->nextstate])->action.acv;
+	void *const castaction = (void *) caststate->action.acv();
+	void *const nextaction = (void *) (&states[caststate->nextstate])->action.acv();
 
 	// [crispy] fix Doomguy in casting sequence
 	if (castaction == NULL)
@@ -501,8 +501,8 @@ static int F_SoundForState (int st)
 		{
 			const actionsound_t *const as = &actionsounds[i];
 
-			if ((!as->early && castaction == as->action.acv) ||
-			    (as->early && nextaction == as->action.acv))
+			if ((!as->early && castaction == as->action.acv()) ||
+			    (as->early && nextaction == as->action.acv()))
 			{
 				return as->sound;
 			}
@@ -570,7 +570,7 @@ void F_CastTicker (void)
 	    goto stopattack;	// Oh, gross hack!
 	*/
 	// [crispy] Allow A_RandomJump() in deaths in cast sequence
-	if (caststate->action.acp3 == A_RandomJump && Crispy_Random() < caststate->misc2)
+	if (caststate->action.acp3() == A_RandomJump && Crispy_Random() < caststate->misc2)
 	{
 	    st = caststate->misc1;
 	}
@@ -663,7 +663,7 @@ void F_CastTicker (void)
     if (casttics == -1)
     {
 	// [crispy] Allow A_RandomJump() in deaths in cast sequence
-	if (caststate->action.acp3 == A_RandomJump)
+	if (caststate->action.acp3() == A_RandomJump)
 	{
 	    if (Crispy_Random() < caststate->misc2)
 	    {
@@ -738,7 +738,7 @@ boolean F_CastResponder (event_t* ev)
     caststate = &states[mobjinfo[castorder[castnum].type].deathstate];
     casttics = caststate->tics;
     // [crispy] Allow A_RandomJump() in deaths in cast sequence
-    if (casttics == -1 && caststate->action.acp3 == A_RandomJump)
+    if (casttics == -1 && caststate->action.acp3() == A_RandomJump)
     {
         if (Crispy_Random() < caststate->misc2)
         {
