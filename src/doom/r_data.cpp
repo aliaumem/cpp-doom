@@ -60,14 +60,14 @@
 // into the rectangular texture space using origin
 // and possibly other attributes.
 //
-typedef PACKED_STRUCT (
+PACKED_STRUCT(mappatch_t
 {
-    short	originx;
-    short	originy;
-    short	patch;
-    short	stepdir;
-    short	colormap;
-}) mappatch_t;
+short	originx;
+short	originy;
+short	patch;
+short	stepdir;
+short	colormap;
+});
 
 
 //
@@ -75,39 +75,37 @@ typedef PACKED_STRUCT (
 // A DOOM wall texture is a list of patches
 // which are to be combined in a predefined order.
 //
-typedef PACKED_STRUCT (
+PACKED_STRUCT(maptexture_t
 {
-    char		name[8];
-    int			masked;	
-    short		width;
-    short		height;
-    int                 obsolete;
-    short		patchcount;
-    mappatch_t	patches[1];
-}) maptexture_t;
+char		name[8];
+int			masked;
+short		width;
+short		height;
+int                 obsolete;
+short		patchcount;
+mappatch_t	patches[1];
+});
 
 
 // A single patch from a texture definition,
 //  basically a rectangular area within
 //  the texture rectangle.
-typedef struct
+struct texpatch_t
 {
-    // Block origin (allways UL),
-    // which has allready accounted
-    // for the internal origin of the patch.
-    short	originx;	
-    short	originy;
-    int		patch;
-} texpatch_t;
+// Block origin (allways UL),
+// which has allready accounted
+// for the internal origin of the patch.
+short	originx;
+short	originy;
+int		patch;
+};
 
 
 // A maptexturedef_t describes a rectangular texture,
 //  which is composed of one or more mappatch_t structures
 //  that arrange graphic patches.
 
-typedef struct texture_s texture_t;
-
-struct texture_s
+struct texture_t
 {
     // Keep name for switch changing, etc.
     char	name[8];		
@@ -666,24 +664,24 @@ void R_InitTextures (void)
     int			temp2;
     int			temp3;
 
-    typedef struct
-    {
-	int lumpnum;
-	void *names;
-	short nummappatches;
-	short summappatches;
-	char *name_p;
-    } pnameslump_t;
+    struct pnameslump_t
+{
+int lumpnum;
+void *names;
+short nummappatches;
+short summappatches;
+char *name_p;
+};
 
-    typedef struct
-    {
-	int lumpnum;
-	int *maptex;
-	int maxoff;
-	short numtextures;
-	short sumtextures;
-	short pnamesoffset;
-    } texturelump_t;
+    struct texturelump_t
+{
+int lumpnum;
+int *maptex;
+int maxoff;
+short numtextures;
+short sumtextures;
+short pnamesoffset;
+};
 
     pnameslump_t	*pnameslumps = NULL;
     texturelump_t	*texturelumps = NULL, *texturelump;

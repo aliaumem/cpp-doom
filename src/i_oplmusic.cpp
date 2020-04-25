@@ -48,67 +48,134 @@
 
 #define PERCUSSION_LOG_LEN 16
 
-typedef PACKED_STRUCT (
+PACKED_STRUCT(genmidi_op_t
 {
-    byte tremolo;
-    byte attack;
-    byte sustain;
-    byte waveform;
-    byte scale;
-    byte level;
-}) genmidi_op_t;
+byte tremolo;
+byte attack;
+byte sustain;
+byte waveform;
+byte scale;
+byte level;
+});
 
-typedef PACKED_STRUCT (
+PACKED_STRUCT(genmidi_voice_t
 {
-    genmidi_op_t modulator;
-    byte feedback;
-    genmidi_op_t carrier;
-    byte unused;
-    short base_note_offset;
-}) genmidi_voice_t;
+genmidi_op_t modulator;
+byte feedback;
+genmidi_op_t carrier;
+byte unused;
+short base_note_offset;
+});
 
-typedef PACKED_STRUCT (
+PACKED_STRUCT(genmidi_instr_t
 {
-    unsigned short flags;
-    byte fine_tuning;
-    byte fixed_note;
+unsigned short flags;
+byte fine_tuning;
+byte fixed_note;
 
-    genmidi_voice_t voices[2];
-}) genmidi_instr_t;
+
+genmidi_voice_t voices[2];
+});
 
 // Data associated with a channel of a track that is currently playing.
 
-typedef struct
+struct opl_channel_data_t
 {
-    // The instrument currently used for this track.
+// The instrument currently used for this track.
 
-    genmidi_instr_t *instrument;
 
-    // Volume level
+genmidi_instr_t *instrument;
 
-    int volume;
-    int volume_base;
 
-    // Pan
+// Volume level
 
-    int pan;
 
-    // Pitch bend value:
+int volume;
+int volume_base;
 
-    int bend;
 
-} opl_channel_data_t;
+// Pan
+
+
+int pan;
+
+
+// Pitch bend value:
+
+
+int bend;
+
+
+};
 
 // Data associated with a track that is currently playing.
 
-typedef struct
+struct opl_track_data_t
 {
-    // Track iterator used to read new events.
+// Track iterator used to read new events.
 
-    midi_track_iter_t *iter;
-} opl_track_data_t;
 
-typedef struct opl_voice_s opl_voice_t;
+midi_track_iter_t *iter;
+};
+
+struct opl_voice_t
+{
+// Index of this voice:
+int index;
+
+
+// The operators used by this voice:
+int op1, op2;
+
+
+// Array used by voice:
+int array;
+
+
+// Currently-loaded instrument data
+genmidi_instr_t *current_instr;
+
+
+// The voice number in the instrument to use.
+// This is normally set to zero; if this is a double voice
+// instrument, it may be one.
+unsigned int current_instr_voice;
+
+
+// The channel currently using this voice.
+opl_channel_data_t *channel;
+
+
+// The midi key that this voice is playing.
+unsigned int key;
+
+
+// The note being played.  This is normally the same as
+// the key, but if the instrument is a fixed pitch
+// instrument, it is different.
+unsigned int note;
+
+
+// The frequency value being used.
+unsigned int freq;
+
+
+// The volume of the note being played on this channel.
+unsigned int note_volume;
+
+
+// The current volume (register value) that has been set for this channel.
+unsigned int car_volume;
+unsigned int mod_volume;
+
+
+// Pan.
+unsigned int reg_pan;
+
+
+// Priority.
+unsigned int priority;
+};
 
 struct opl_voice_s
 {

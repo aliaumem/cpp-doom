@@ -45,11 +45,10 @@ typedef int16_t         Bit16s;
 typedef uint8_t         Bit8u;
 typedef int8_t          Bit8s;
 
-typedef struct _opl3_slot opl3_slot;
-typedef struct _opl3_channel opl3_channel;
-typedef struct _opl3_chip opl3_chip;
+struct opl3_channel;
+struct opl3_chip;
 
-struct _opl3_slot {
+struct opl3_slot {
     opl3_channel *channel;
     opl3_chip *chip;
     Bit16s out;
@@ -81,7 +80,7 @@ struct _opl3_slot {
     Bit8u slot_num;
 };
 
-struct _opl3_channel {
+struct opl3_channel {
     opl3_slot *slots[2];
     opl3_channel *pair;
     opl3_chip *chip;
@@ -97,13 +96,13 @@ struct _opl3_channel {
     Bit8u ch_num;
 };
 
-typedef struct _opl3_writebuf {
+typedef struct opl3_writebuf {
     Bit64u time;
     Bit16u reg;
     Bit8u data;
-} opl3_writebuf;
+};
 
-struct _opl3_chip {
+struct opl3_chip {
     opl3_channel channel[18];
     opl3_slot slot[36];
     Bit16u timer;

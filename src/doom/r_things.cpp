@@ -49,16 +49,18 @@
 
 
 
-typedef struct
+struct maskdraw_t
 {
-    int		x1;
-    int		x2;
-	
-    int		column;
-    int		topclip;
-    int		bottomclip;
+int		x1;
+int		x2;
 
-} maskdraw_t;
+
+int		column;
+int		topclip;
+int		bottomclip;
+
+
+};
 
 
 static degenmobj_t laserspot_m = {{0}};

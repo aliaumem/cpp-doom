@@ -23,18 +23,18 @@
 #include <vector>
 #include <memory>
 
-typedef struct
+struct txt_callback_t
 {
-    char *signal_name;
-    TxtWidgetSignalFunc func;
-    void *user_data;
-} txt_callback_t;
+char *signal_name;
+TxtWidgetSignalFunc func;
+void *user_data;
+};
 
-struct txt_callback_table_s
+struct txt_callback_table_t
 {
     std::vector<txt_callback_t> callbacks;
 
-    ~txt_callback_table_s() {
+    ~txt_callback_table_t() {
       for (auto &callback : callbacks) {
         free(callback.signal_name);
       }

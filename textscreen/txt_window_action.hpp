@@ -31,12 +31,12 @@
  * When a window action is triggered, the "pressed" signal is emitted.
  */
 
-typedef struct txt_window_action_s txt_window_action_t;
+struct txt_window_action_t;
 
 #include "txt_widget.hpp"
 #include "txt_window.hpp"
 
-struct txt_window_action_s
+struct txt_window_action_t
 {
     txt_widget_t widget;
     char *label;

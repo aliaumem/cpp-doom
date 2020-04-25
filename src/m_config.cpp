@@ -54,52 +54,57 @@ static char *autoload_path = "";
 static const char *default_main_config;
 static const char *default_extra_config;
 
-typedef enum 
+enum default_type_t
 {
-    DEFAULT_INT,
-    DEFAULT_INT_HEX,
-    DEFAULT_STRING,
-    DEFAULT_FLOAT,
-    DEFAULT_KEY,
-} default_type_t;
+DEFAULT_INT,
+DEFAULT_INT_HEX,
+DEFAULT_STRING,
+DEFAULT_FLOAT,
+DEFAULT_KEY,
+};
 
-typedef struct
+struct default_t
 {
-    // Name of the variable
-    const char *name;
+// Name of the variable
+const char *name;
 
-    // Pointer to the location in memory of the variable
-    union {
-        int *i;
-        char **s;
-        float *f;
-    } location;
 
-    // Type of the variable
-    default_type_t type;
+// Pointer to the location in memory of the variable
+union {
+int *i;
+char **s;
+float *f;
+} location;
 
-    // If this is a key value, the original integer scancode we read from
-    // the config file before translating it to the internal key value.
-    // If zero, we didn't read this value from a config file.
-    int untranslated;
 
-    // The value we translated the scancode into when we read the 
-    // config file on startup.  If the variable value is different from
-    // this, it has been changed and needs to be converted; otherwise,
-    // use the 'untranslated' value.
-    int original_translated;
+// Type of the variable
+default_type_t type;
 
-    // If true, this config variable has been bound to a variable
-    // and is being used.
-    boolean bound;
-} default_t;
 
-typedef struct
+// If this is a key value, the original integer scancode we read from
+// the config file before translating it to the internal key value.
+// If zero, we didn't read this value from a config file.
+int untranslated;
+
+
+// The value we translated the scancode into when we read the
+// config file on startup.  If the variable value is different from
+// this, it has been changed and needs to be converted; otherwise,
+// use the 'untranslated' value.
+int original_translated;
+
+
+// If true, this config variable has been bound to a variable
+// and is being used.
+boolean bound;
+};
+
+struct default_collection_t
 {
-    default_t *defaults;
-    int numdefaults;
-    const char *filename;
-} default_collection_t;
+default_t *defaults;
+int numdefaults;
+const char *filename;
+};
 
 #define CONFIG_VARIABLE_GENERIC(name, type) \
     { #name, {NULL}, type, 0, 0, false }

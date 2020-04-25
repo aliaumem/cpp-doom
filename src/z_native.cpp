@@ -29,9 +29,7 @@
 
 #define ZONEID	0x1d4a11
 
-typedef struct memblock_s memblock_t;
-
-struct memblock_s
+struct memblock_t
 {
     int id; // = ZONEID
     int tag;

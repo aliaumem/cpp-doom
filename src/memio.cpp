@@ -25,12 +25,14 @@
 #include "../utils/memory.hpp"
 #include "z_zone.hpp"
 
-typedef enum {
-	MODE_READ,
-	MODE_WRITE,
-} memfile_mode_t;
+enum memfile_mode_t
+{
+MODE_READ,
+MODE_WRITE,
+};
 
-struct _MEMFILE {
+struct MEMFILE
+{
 	unsigned char *buf;
 	size_t buflen;
 	size_t alloced;

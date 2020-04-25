@@ -35,44 +35,47 @@
 #pragma pack(push, 1)
 #endif
 
-typedef PACKED_STRUCT (
+PACKED_STRUCT(chunk_header_t
 {
-    byte chunk_id[4];
-    unsigned int chunk_size;
-}) chunk_header_t;
+byte chunk_id[4];
+unsigned int chunk_size;
+});
 
-typedef PACKED_STRUCT (
+PACKED_STRUCT(midi_header_t
 {
-    chunk_header_t chunk_header;
-    unsigned short format_type;
-    unsigned short num_tracks;
-    unsigned short time_division;
-}) midi_header_t;
+chunk_header_t chunk_header;
+unsigned short format_type;
+unsigned short num_tracks;
+unsigned short time_division;
+});
 
 // haleyjd 09/09/10: packing off.
 #ifdef _MSC_VER
 #pragma pack(pop)
 #endif
 
-typedef struct
+struct midi_track_t
 {
-    // Length in bytes:
+// Length in bytes:
 
-    unsigned int data_len;
 
-    // Events in this track:
+unsigned int data_len;
 
-    midi_event_t *events;
-    int num_events;
-} midi_track_t;
 
-struct midi_track_iter_s
+// Events in this track:
+
+
+midi_event_t *events;
+int num_events;
+};
+
+struct midi_track_iter_t
 {
     midi_track_t *track;
     unsigned int position;
 };
 
-struct midi_file_s
+struct midi_file_t
 {
     midi_header_t header;
 

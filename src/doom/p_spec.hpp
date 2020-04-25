@@ -125,7 +125,7 @@ int EV_DoDonut(line_t* line);
 //
 // P_LIGHTS
 //
-typedef struct
+struct fireflicker_t
 {
     thinker_t	thinker;
     sector_t*	sector;
@@ -133,40 +133,42 @@ typedef struct
     int		maxlight;
     int		minlight;
     
-} fireflicker_t;
+};
 
 
 
-typedef struct
+struct lightflash_t
 {
-    thinker_t	thinker;
-    sector_t*	sector;
-    int		count;
-    int		maxlight;
-    int		minlight;
-    int		maxtime;
-    int		mintime;
-    
-} lightflash_t;
+thinker_t	thinker;
+sector_t*	sector;
+int		count;
+int		maxlight;
+int		minlight;
+int		maxtime;
+int		mintime;
+
+
+};
 
 
 
-typedef struct
+struct strobe_t
 {
-    thinker_t	thinker;
-    sector_t*	sector;
-    int		count;
-    int		minlight;
-    int		maxlight;
-    int		darktime;
-    int		brighttime;
-    
-} strobe_t;
+thinker_t	thinker;
+sector_t*	sector;
+int		count;
+int		minlight;
+int		maxlight;
+int		darktime;
+int		brighttime;
+
+
+};
 
 
 
 
-typedef struct
+struct glow_t
 {
     thinker_t	thinker;
     sector_t*	sector;
@@ -174,7 +176,7 @@ typedef struct
     int		maxlight;
     int		direction;
 
-} glow_t;
+};
 
 
 #define GLOWSPEED			8
@@ -220,24 +222,26 @@ typedef PACKED_STRUCT (
 }) switchlist_t;
 
 
-typedef enum
+enum bwhere_e
 {
-    top,
-    middle,
-    bottom
-
-} bwhere_e;
+top,
+middle,
+bottom
 
 
-typedef struct
+};
+
+
+struct button_t
 {
-    line_t*	line;
-    bwhere_e	where;
-    int		btexture;
-    int		btimer;
-    degenmobj_t *soundorg;
+line_t*	line;
+bwhere_e	where;
+int		btexture;
+int		btimer;
+degenmobj_t *soundorg;
 
-} button_t;
+
+};
 
 
 
@@ -265,45 +269,48 @@ void P_InitSwitchList(void);
 //
 // P_PLATS
 //
-typedef enum
+enum plat_e
 {
-    up,
-    down,
-    waiting,
-    in_stasis
-
-} plat_e;
+up,
+down,
+waiting,
+in_stasis
 
 
+};
 
-typedef enum
+
+
+enum plattype_e
 {
-    perpetualRaise,
-    downWaitUpStay,
-    raiseAndChange,
-    raiseToNearestAndChange,
-    blazeDWUS
-
-} plattype_e;
+perpetualRaise,
+downWaitUpStay,
+raiseAndChange,
+raiseToNearestAndChange,
+blazeDWUS
 
 
+};
 
-typedef struct
+
+
+struct plat_t
 {
-    thinker_t	thinker;
-    sector_t*	sector;
-    fixed_t	speed;
-    fixed_t	low;
-    fixed_t	high;
-    int		wait;
-    int		count;
-    plat_e	status;
-    plat_e	oldstatus;
-    boolean	crush;
-    int		tag;
-    plattype_e	type;
-    
-} plat_t;
+thinker_t	thinker;
+sector_t*	sector;
+fixed_t	speed;
+fixed_t	low;
+fixed_t	high;
+int		wait;
+int		count;
+plat_e	status;
+plat_e	oldstatus;
+boolean	crush;
+int		tag;
+plattype_e	type;
+
+
+};
 
 
 
@@ -331,7 +338,7 @@ void    P_ActivateInStasis(int tag);
 //
 // P_DOORS
 //
-typedef enum
+enum vldoor_e
 {
     vld_normal,
     vld_close30ThenOpen,
@@ -342,11 +349,11 @@ typedef enum
     vld_blazeOpen,
     vld_blazeClose
 
-} vldoor_e;
+};
 
 
 
-typedef struct
+struct vldoor_t
 {
     thinker_t	thinker;
     vldoor_e	type;
@@ -363,7 +370,7 @@ typedef struct
     // when it reaches 0, start going down
     int             topcountdown;
     
-} vldoor_t;
+};
 
 
 
@@ -483,7 +490,7 @@ EV_SlidingDoor
 //
 // P_CEILNG
 //
-typedef enum
+enum ceiling_e
 {
     lowerToFloor,
     raiseToHighest,
@@ -492,11 +499,11 @@ typedef enum
     fastCrushAndRaise,
     silentCrushAndRaise
 
-} ceiling_e;
+};
 
 
 
-typedef struct
+struct ceiling_t
 {
     thinker_t	thinker;
     ceiling_e	type;
@@ -513,7 +520,7 @@ typedef struct
     int		tag;                   
     int		olddirection;
     
-} ceiling_t;
+};
 
 
 
@@ -540,7 +547,7 @@ void    P_ActivateInStasisCeiling(line_t* line);
 //
 // P_FLOOR
 //
-typedef enum
+enum floor_e
 {
     // lower floor to highest surrounding floor
     lowerFloor,
@@ -573,21 +580,21 @@ typedef enum
     donutRaise,
     raiseFloor512
     
-} floor_e;
+};
 
 
 
 
-typedef enum
+enum stair_e
 {
     build8,	// slowly build by 8
     turbo16	// quickly build by 16
     
-} stair_e;
+};
 
 
 
-typedef struct
+struct floormove_t
 {
     thinker_t	thinker;
     floor_e	type;
@@ -599,19 +606,20 @@ typedef struct
     fixed_t	floordestheight;
     fixed_t	speed;
 
-} floormove_t;
+};
 
 
 
 #define FLOORSPEED		FRACUNIT
 
-typedef enum
+enum result_e
 {
-    ok,
-    crushed,
-    pastdest
-    
-} result_e;
+ok,
+crushed,
+pastdest
+
+
+};
 
 result_e
 T_MovePlane

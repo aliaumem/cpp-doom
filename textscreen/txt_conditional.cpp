@@ -19,7 +19,7 @@
 #include "txt_strut.hpp"
 #include <new>
 
-struct txt_conditional_s
+struct txt_conditional_t
 {
     txt_widget_t widget;
     int *var;

@@ -72,7 +72,7 @@ static boolean IsDirectory(char *dir, struct dirent *de)
     }
 }
 
-struct glob_s
+struct glob_t
 {
     char **globs;
     int num_globs;

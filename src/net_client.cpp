@@ -44,60 +44,79 @@
 
 extern void D_ReceiveTic(ticcmd_t *ticcmds, boolean *playeringame);
 
-typedef enum
+enum net_clientstate_t
 {
-    // waiting for the game to launch
+// waiting for the game to launch
 
-    CLIENT_STATE_WAITING_LAUNCH,
 
-    // waiting for the game to start
+CLIENT_STATE_WAITING_LAUNCH,
 
-    CLIENT_STATE_WAITING_START,
 
-    // in game
+// waiting for the game to start
 
-    CLIENT_STATE_IN_GAME,
 
-} net_clientstate_t;
+CLIENT_STATE_WAITING_START,
+
+
+// in game
+
+
+CLIENT_STATE_IN_GAME,
+
+
+};
 
 // Type of structure used in the receive window
 
-typedef struct
+struct net_server_recv_t
 {
-    // Whether this tic has been received yet
+// Whether this tic has been received yet
 
-    boolean active;
 
-    // Last time we sent a resend request for this tic
+boolean active;
 
-    unsigned int resend_time;
 
-    // Tic data from server
+// Last time we sent a resend request for this tic
 
-    net_full_ticcmd_t cmd;
 
-} net_server_recv_t;
+unsigned int resend_time;
+
+
+// Tic data from server
+
+
+net_full_ticcmd_t cmd;
+
+
+};
 
 // Type of structure used in the send window
 
-typedef struct
+struct net_server_send_t
 {
-    // Whether this slot is active yet
+// Whether this slot is active yet
 
-    boolean active;
 
-    // The tic number
+boolean active;
 
-    unsigned int seq;
 
-    // Time the command was generated
+// The tic number
 
-    unsigned int time;
 
-    // Ticcmd diff
+unsigned int seq;
 
-    net_ticdiff_t cmd;
-} net_server_send_t;
+
+// Time the command was generated
+
+
+unsigned int time;
+
+
+// Ticcmd diff
+
+
+net_ticdiff_t cmd;
+};
 
 extern fixed_t offsetms;
 

@@ -28,7 +28,7 @@
  * shows or hides it based on the value of a variable.
  */
 
-typedef struct txt_conditional_s txt_conditional_t;
+struct txt_conditional_t;
 
 #include "txt_widget.hpp"
 

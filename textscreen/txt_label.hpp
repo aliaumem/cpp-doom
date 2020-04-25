@@ -26,13 +26,12 @@
  *
  * A label widget does nothing except show a text label.
  */
-
-typedef struct txt_label_s txt_label_t;
+struct txt_label_t;
 
 #include "txt_main.hpp"
 #include "txt_widget.hpp"
 
-struct txt_label_s
+struct txt_label_t
 {
     txt_widget_t widget;
     char *label;

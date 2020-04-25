@@ -41,27 +41,27 @@ enum musevent
 };
 
 // MIDI event codes
-typedef enum
+enum midievent
 {
-    midi_releasekey = 0x80,
-    midi_presskey = 0x90,
-    midi_aftertouchkey = 0xA0,
-    midi_changecontroller = 0xB0,
-    midi_changepatch = 0xC0,
-    midi_aftertouchchannel = 0xD0,
-    midi_pitchwheel = 0xE0
-} midievent;
+midi_releasekey = 0x80,
+midi_presskey = 0x90,
+midi_aftertouchkey = 0xA0,
+midi_changecontroller = 0xB0,
+midi_changepatch = 0xC0,
+midi_aftertouchchannel = 0xD0,
+midi_pitchwheel = 0xE0
+};
 
 // Structure to hold MUS file header
-typedef PACKED_STRUCT (
+PACKED_STRUCT(musheader
 {
-    byte id[4];
-    unsigned short scorelength;
-    unsigned short scorestart;
-    unsigned short primarychannels;
-    unsigned short secondarychannels;
-    unsigned short instrumentcount;
-}) musheader;
+byte id[4];
+unsigned short scorelength;
+unsigned short scorestart;
+unsigned short primarychannels;
+unsigned short secondarychannels;
+unsigned short instrumentcount;
+});
 
 // Standard MIDI type 0 header + track header
 static const byte midiheader[] =

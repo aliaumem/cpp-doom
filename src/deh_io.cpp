@@ -30,13 +30,13 @@
 #include "deh_defs.hpp"
 #include "deh_io.hpp"
 
-typedef enum
+enum deh_input_type_t
 {
-    DEH_INPUT_FILE,
-    DEH_INPUT_LUMP
-} deh_input_type_t;
+DEH_INPUT_FILE,
+DEH_INPUT_LUMP
+};
 
-struct deh_context_s
+struct deh_context_t
 {
     deh_input_type_t type;
     char *filename;

@@ -35,19 +35,19 @@
 
 #include <memory>
 
-typedef enum
+enum txt_vert_align_t
 {
-    TXT_VERT_TOP,
-    TXT_VERT_CENTER,
-    TXT_VERT_BOTTOM,
-} txt_vert_align_t;
+TXT_VERT_TOP,
+TXT_VERT_CENTER,
+TXT_VERT_BOTTOM,
+};
 
-typedef enum
+enum txt_horiz_align_t
 {
-    TXT_HORIZ_LEFT,
-    TXT_HORIZ_CENTER,
-    TXT_HORIZ_RIGHT,
-} txt_horiz_align_t;
+TXT_HORIZ_LEFT,
+TXT_HORIZ_CENTER,
+TXT_HORIZ_RIGHT,
+};
 
 /**
  * A GUI widget.
@@ -60,10 +60,9 @@ typedef enum
  * when a signal occurs using the @ref TXT_SignalConnect function.
  */
 
-typedef struct txt_widget_s txt_widget_t;
 
-typedef struct txt_widget_class_s txt_widget_class_t;
-typedef struct txt_callback_table_s txt_callback_table_t;
+
+struct txt_callback_table_t;
 
 typedef void (*TxtWidgetSizeCalc)(TXT_UNCAST_ARG(widget));
 typedef void (*TxtWidgetDrawer)(TXT_UNCAST_ARG(widget));
@@ -75,7 +74,7 @@ typedef void (*TxtWidgetLayoutFunc)(TXT_UNCAST_ARG(widget));
 typedef int (*TxtWidgetSelectableFunc)(TXT_UNCAST_ARG(widget));
 typedef void (*TxtWidgetFocusFunc)(TXT_UNCAST_ARG(widget), int focused);
 
-struct txt_widget_class_s
+struct txt_widget_class_t
 {
     TxtWidgetSelectableFunc selectable;
     TxtWidgetSizeCalc size_calc;
@@ -87,7 +86,7 @@ struct txt_widget_class_s
     TxtWidgetFocusFunc focus_change;
 };
 
-struct txt_widget_s
+struct txt_widget_t
 {
     txt_widget_class_t *widget_class;
     std::shared_ptr<txt_callback_table_t> callback_table;

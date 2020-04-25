@@ -45,103 +45,138 @@
 // How often to re-resolve the address of the master server?
 #define MASTER_RESOLVE_PERIOD 8 * 60 * 60 /* 8 hours */
 
-typedef enum
+enum net_server_state_t
 {
-    // waiting for the game to be "launched" (key player to press the start
-    // button)
+// waiting for the game to be "launched" (key player to press the start
+// button)
 
-    SERVER_WAITING_LAUNCH,
 
-    // game has been launched, we are waiting for all players to be ready
-    // so the game can start.
+SERVER_WAITING_LAUNCH,
 
-    SERVER_WAITING_START,
 
-    // in a game
+// game has been launched, we are waiting for all players to be ready
+// so the game can start.
 
-    SERVER_IN_GAME,
-} net_server_state_t;
 
-typedef struct
+SERVER_WAITING_START,
+
+
+// in a game
+
+
+SERVER_IN_GAME,
+};
+
+struct net_client_t
 {
-    boolean active;
-    int player_number;
-    net_addr_t *addr;
-    net_connection_t connection;
-    int last_send_time;
-    char *name;
+boolean active;
+int player_number;
+net_addr_t *addr;
+net_connection_t connection;
+int last_send_time;
+char *name;
 
-    // If true, the client has sent the NET_PACKET_TYPE_GAMESTART
-    // message indicating that it is ready for the game to start.
 
-    boolean ready;
+// If true, the client has sent the NET_PACKET_TYPE_GAMESTART
+// message indicating that it is ready for the game to start.
 
-    // Time that this client connected to the server.
-    // This is used to determine the controller (oldest client).
 
-    unsigned int connect_time;
+boolean ready;
 
-    // Last time new gamedata was received from this client
 
-    int last_gamedata_time;
+// Time that this client connected to the server.
+// This is used to determine the controller (oldest client).
 
-    // recording a demo without -longtics
 
-    boolean recording_lowres;
+unsigned int connect_time;
 
-    // send queue: items to send to the client
-    // this is a circular buffer
 
-    int sendseq;
-    net_full_ticcmd_t sendqueue[BACKUPTICS];
+// Last time new gamedata was received from this client
 
-    // Latest acknowledged by the client
 
-    unsigned int acknowledged;
+int last_gamedata_time;
 
-    // Value of max_players specified by the client on connect.
 
-    int max_players;
+// recording a demo without -longtics
 
-    // Observer: receives data but does not participate in the game.
 
-    boolean drone;
+boolean recording_lowres;
 
-    // SHA1 hash sums of the client's WAD directory and dehacked data
 
-    sha1_digest_t wad_sha1sum;
-    sha1_digest_t deh_sha1sum;
+// send queue: items to send to the client
+// this is a circular buffer
 
-    // Is this client is playing with the Freedoom IWAD?
 
-    unsigned int is_freedoom;
+int sendseq;
+net_full_ticcmd_t sendqueue[BACKUPTICS];
 
-    // Player class (for Hexen)
 
-    int player_class;
+// Latest acknowledged by the client
 
-} net_client_t;
+
+unsigned int acknowledged;
+
+
+// Value of max_players specified by the client on connect.
+
+
+int max_players;
+
+
+// Observer: receives data but does not participate in the game.
+
+
+boolean drone;
+
+
+// SHA1 hash sums of the client's WAD directory and dehacked data
+
+
+sha1_digest_t wad_sha1sum;
+sha1_digest_t deh_sha1sum;
+
+
+// Is this client is playing with the Freedoom IWAD?
+
+
+unsigned int is_freedoom;
+
+
+// Player class (for Hexen)
+
+
+int player_class;
+
+
+};
 
 // structure used for the recv window
 
-typedef struct 
+struct net_client_recv_t
 {
-    // Whether this tic has been received yet
+// Whether this tic has been received yet
 
-    boolean active;
 
-    // Latency value received from the client
+boolean active;
 
-    signed int latency;
 
-    // Last time we sent a resend request for this tic
+// Latency value received from the client
 
-    unsigned int resend_time;
 
-    // Tic data itself
+signed int latency;
 
-    net_ticdiff_t diff;
-} net_client_recv_t;
+
+// Last time we sent a resend request for this tic
+
+
+unsigned int resend_time;
+
+
+// Tic data itself
+
+
+net_ticdiff_t diff;
+};
 
 static net_server_state_t server_state;
 static boolean server_initialized = false;

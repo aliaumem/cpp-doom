@@ -109,67 +109,81 @@
 
 
 
-typedef enum
+enum animenum_t
 {
-    ANIM_ALWAYS,
-    ANIM_RANDOM,
-    ANIM_LEVEL
+ANIM_ALWAYS,
+ANIM_RANDOM,
+ANIM_LEVEL
 
-} animenum_t;
 
-typedef struct
+};
+
+struct point_t
 {
-    int		x;
-    int		y;
-    
-} point_t;
+int		x;
+int		y;
+
+
+};
 
 
 //
 // Animation.
 // There is another anim_t used in p_spec.
 //
-typedef struct
+struct anim_t
 {
-    animenum_t	type;
+animenum_t	type;
 
-    // period in tics between animations
-    int		period;
 
-    // number of animation frames
-    int		nanims;
+// period in tics between animations
+int		period;
 
-    // location of animation
-    point_t	loc;
 
-    // ALWAYS: n/a,
-    // RANDOM: period deviation (<256),
-    // LEVEL: level
-    int		data1;
+// number of animation frames
+int		nanims;
 
-    // ALWAYS: n/a,
-    // RANDOM: random base period,
-    // LEVEL: n/a
-    int		data2; 
 
-    // actual graphics for frames of animations
-    patch_t*	p[3]; 
+// location of animation
+point_t	loc;
 
-    // following must be initialized to zero before use!
 
-    // next value of bcnt (used in conjunction with period)
-    int		nexttic;
+// ALWAYS: n/a,
+// RANDOM: period deviation (<256),
+// LEVEL: level
+int		data1;
 
-    // last drawn animation frame
-    int		lastdrawn;
 
-    // next frame number to animate
-    int		ctr;
-    
-    // used by RANDOM and LEVEL when animating
-    int		state;  
+// ALWAYS: n/a,
+// RANDOM: random base period,
+// LEVEL: n/a
+int		data2;
 
-} anim_t;
+
+// actual graphics for frames of animations
+patch_t*	p[3];
+
+
+// following must be initialized to zero before use!
+
+
+// next value of bcnt (used in conjunction with period)
+int		nexttic;
+
+
+// last drawn animation frame
+int		lastdrawn;
+
+
+// next frame number to animate
+int		ctr;
+
+
+// used by RANDOM and LEVEL when animating
+int		state;
+
+
+};
 
 
 static point_t lnodes[NUMEPISODES][NUMMAPS] =

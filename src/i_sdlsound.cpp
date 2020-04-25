@@ -47,9 +47,7 @@
 //#define DEBUG_DUMP_WAVS
 #define NUM_CHANNELS 16*2 // [crispy] support up to 32 sound channels
 
-typedef struct allocated_sound_s allocated_sound_t;
-
-struct allocated_sound_s
+struct allocated_sound_t
 {
     sfxinfo_t *sfxinfo;
     Mix_Chunk chunk;

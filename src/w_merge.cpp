@@ -32,25 +32,25 @@
 #include "w_wad.hpp"
 #include "z_zone.hpp"
 
-typedef enum 
-{ 
-    SECTION_NORMAL, 
-    SECTION_FLATS, 
-    SECTION_SPRITES,
-} section_t;
-
-typedef struct
+enum section_t
 {
-    lumpinfo_t **lumps;
-    int numlumps;
-} searchlist_t;
+SECTION_NORMAL,
+SECTION_FLATS,
+SECTION_SPRITES,
+};
 
-typedef struct
+struct searchlist_t
 {
-    char sprname[4];
-    char frame;
-    lumpinfo_t *angle_lumps[8];
-} sprite_frame_t;
+lumpinfo_t **lumps;
+int numlumps;
+};
+
+struct sprite_frame_t
+{
+char sprname[4];
+char frame;
+lumpinfo_t *angle_lumps[8];
+};
 
 static searchlist_t iwad;
 static searchlist_t iwad_sprites;
@@ -730,11 +730,12 @@ int W_MergeDump (const char *file)
     uint32_t i, dir_p;
 
     // [crispy] WAD directory structure
-    typedef struct {
-	uint32_t pos;
-	uint32_t size;
-	char name[8];
-    } directory_t;
+    struct directory_t
+{
+uint32_t pos;
+uint32_t size;
+char name[8];
+};
     directory_t *dir = NULL;
 
     // [crispy] open file for writing

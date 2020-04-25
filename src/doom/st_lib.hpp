@@ -29,103 +29,124 @@
 
 // Number widget
 
-typedef struct
+struct st_number_t
 {
-    // upper right-hand corner
-    //  of the number (right-justified)
-    int		x;
-    int		y;
+// upper right-hand corner
+//  of the number (right-justified)
+int		x;
+int		y;
 
-    // max # of digits in number
-    int width;    
 
-    // last number value
-    int		oldnum;
-    
-    // pointer to current value
-    int*	num;
+// max # of digits in number
+int width;
 
-    // pointer to boolean stating
-    //  whether to update number
-    boolean*	on;
 
-    // list of patches for 0-9
-    patch_t**	p;
+// last number value
+int		oldnum;
 
-    // user data
-    int data;
-    
-} st_number_t;
+
+// pointer to current value
+int*	num;
+
+
+// pointer to boolean stating
+//  whether to update number
+boolean*	on;
+
+
+// list of patches for 0-9
+patch_t**	p;
+
+
+// user data
+int data;
+
+
+};
 
 
 
 // Percent widget ("child" of number widget,
 //  or, more precisely, contains a number widget.)
-typedef struct
+struct st_percent_t
 {
-    // number information
-    st_number_t		n;
+// number information
+st_number_t		n;
 
-    // percent sign graphic
-    patch_t*		p;
-    
-    // [crispy] remember previous colorization
-    byte *oldtranslation;
-} st_percent_t;
+
+// percent sign graphic
+patch_t*		p;
+
+
+// [crispy] remember previous colorization
+byte *oldtranslation;
+};
 
 
 
 // Multiple Icon widget
-typedef struct
+struct st_multicon_t
 {
-     // center-justified location of icons
-    int			x;
-    int			y;
+// center-justified location of icons
+int			x;
+int			y;
 
-    // last icon number
-    int			oldinum;
 
-    // pointer to current icon
-    int*		inum;
+// last icon number
+int			oldinum;
 
-    // pointer to boolean stating
-    //  whether to update icon
-    boolean*		on;
 
-    // list of icons
-    patch_t**		p;
-    
-    // user data
-    int			data;
-    
-} st_multicon_t;
+// pointer to current icon
+int*		inum;
+
+
+// pointer to boolean stating
+//  whether to update icon
+boolean*		on;
+
+
+// list of icons
+patch_t**		p;
+
+
+// user data
+int			data;
+
+
+};
 
 
 
 
 // Binary Icon widget
 
-typedef struct
+struct st_binicon_t
 {
-    // center-justified location of icon
-    int			x;
-    int			y;
-
-    // last icon value
-    boolean		oldval;
-
-    // pointer to current icon status
-    boolean*		val;
-
-    // pointer to boolean
-    //  stating whether to update icon
-    boolean*		on;  
+// center-justified location of icon
+int			x;
+int			y;
 
 
-    patch_t*		p;	// icon
-    int			data;   // user data
-    
-} st_binicon_t;
+// last icon value
+boolean		oldval;
+
+
+// pointer to current icon status
+boolean*		val;
+
+
+// pointer to boolean
+//  stating whether to update icon
+boolean*		on;
+
+
+
+
+patch_t*		p;	// icon
+int			data;   // user data
+
+
+};
 
 
 

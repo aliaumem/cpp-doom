@@ -21,65 +21,76 @@
 #include "net_defs.hpp"
 #include "net_packet.hpp"
 
-typedef enum
+enum net_connstate_t
 {
-    // Client has sent a SYN, is waiting for a SYN in response.
-    NET_CONN_STATE_CONNECTING,
+// Client has sent a SYN, is waiting for a SYN in response.
+NET_CONN_STATE_CONNECTING,
 
-    // Successfully connected.
-    NET_CONN_STATE_CONNECTED,
 
-    // Sent a DISCONNECT packet, waiting for a DISCONNECT_ACK reply
-    NET_CONN_STATE_DISCONNECTING,
+// Successfully connected.
+NET_CONN_STATE_CONNECTED,
 
-    // Client successfully disconnected
-    NET_CONN_STATE_DISCONNECTED,
 
-    // We are disconnected, but in a sleep state, waiting for several
-    // seconds.  This is in case the DISCONNECT_ACK we sent failed
-    // to arrive, and we need to send another one.  We keep this as
-    // a valid connection for a few seconds until we are sure that
-    // the other end has successfully disconnected as well.
-    NET_CONN_STATE_DISCONNECTED_SLEEP,
+// Sent a DISCONNECT packet, waiting for a DISCONNECT_ACK reply
+NET_CONN_STATE_DISCONNECTING,
 
-} net_connstate_t;
+
+// Client successfully disconnected
+NET_CONN_STATE_DISCONNECTED,
+
+
+// We are disconnected, but in a sleep state, waiting for several
+// seconds.  This is in case the DISCONNECT_ACK we sent failed
+// to arrive, and we need to send another one.  We keep this as
+// a valid connection for a few seconds until we are sure that
+// the other end has successfully disconnected as well.
+NET_CONN_STATE_DISCONNECTED_SLEEP,
+
+
+};
 
 // Reason a connection was terminated
 
-typedef enum
+enum net_disconnect_reason_t
 {
-    // As the result of a local disconnect request
+// As the result of a local disconnect request
 
-    NET_DISCONNECT_LOCAL,
 
-    // As the result of a remote disconnect request
+NET_DISCONNECT_LOCAL,
 
-    NET_DISCONNECT_REMOTE,
 
-    // Timeout (no data received in a long time)
+// As the result of a remote disconnect request
 
-    NET_DISCONNECT_TIMEOUT,
 
-} net_disconnect_reason_t;
+NET_DISCONNECT_REMOTE,
+
+
+// Timeout (no data received in a long time)
+
+
+NET_DISCONNECT_TIMEOUT,
+
+
+};
 
 #define MAX_RETRIES 5
 
-typedef struct net_reliable_packet_s net_reliable_packet_t;
+struct net_reliable_packet_t;
 
-typedef struct 
+struct net_connection_t
 {
-    net_connstate_t state;
-    net_disconnect_reason_t disconnect_reason;
-    net_addr_t *addr;
-    net_protocol_t protocol;
-    int last_send_time;
-    int num_retries;
-    int keepalive_send_time;
-    int keepalive_recv_time;
-    net_reliable_packet_t *reliable_packets;
-    int reliable_send_seq;
-    int reliable_recv_seq;
-} net_connection_t;
+net_connstate_t state;
+net_disconnect_reason_t disconnect_reason;
+net_addr_t *addr;
+net_protocol_t protocol;
+int last_send_time;
+int num_retries;
+int keepalive_send_time;
+int keepalive_recv_time;
+net_reliable_packet_t *reliable_packets;
+int reliable_send_seq;
+int reliable_recv_seq;
+};
 
 
 void NET_Conn_SendPacket(net_connection_t *conn, net_packet_t *packet);

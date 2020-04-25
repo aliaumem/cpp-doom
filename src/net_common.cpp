@@ -41,7 +41,7 @@
 
 // reliable packet that is guaranteed to reach its destination
 
-struct net_reliable_packet_s
+struct net_reliable_packet_t
 {
     net_packet_t *packet;
     int last_send_time;

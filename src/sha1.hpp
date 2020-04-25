@@ -20,10 +20,10 @@
 
 #include "doomtype.hpp"
 
-typedef struct sha1_context_s sha1_context_t;
 typedef byte sha1_digest_t[20];
 
-struct sha1_context_s {
+struct sha1_context_t
+{
     uint32_t h0,h1,h2,h3,h4;
     uint32_t nblocks;
     byte buf[64];

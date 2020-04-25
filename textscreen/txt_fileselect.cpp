@@ -29,7 +29,8 @@
 #include "txt_widget.hpp"
 #include "../utils/memory.hpp"
 
-struct txt_fileselect_s {
+struct txt_fileselect_t
+{
     txt_widget_t widget;
     txt_inputbox_t *inputbox;
     int size;

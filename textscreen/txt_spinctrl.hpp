@@ -29,17 +29,17 @@
  * to be increased or decreased.
  */
 
-typedef struct txt_spincontrol_s txt_spincontrol_t;
+struct txt_spincontrol_t;
 
-typedef enum
+enum txt_spincontrol_type_t
 {
-    TXT_SPINCONTROL_INT,
-    TXT_SPINCONTROL_FLOAT,
-} txt_spincontrol_type_t;
+TXT_SPINCONTROL_INT,
+TXT_SPINCONTROL_FLOAT,
+};
 
 #include "txt_widget.hpp"
 
-struct txt_spincontrol_s
+struct txt_spincontrol_t
 {
     txt_widget_t widget;
     txt_spincontrol_type_t type;

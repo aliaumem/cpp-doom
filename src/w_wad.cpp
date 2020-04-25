@@ -37,21 +37,21 @@
 #include "../utils/memory.hpp"
 #include "w_wad.hpp"
 
-typedef PACKED_STRUCT (
+PACKED_STRUCT(wadinfo_t
 {
-    // Should be "IWAD" or "PWAD".
-    char		identification[4];
-    int			numlumps;
-    int			infotableofs;
-}) wadinfo_t;
+// Should be "IWAD" or "PWAD".
+char		identification[4];
+int			numlumps;
+int			infotableofs;
+});
 
 
-typedef PACKED_STRUCT (
+PACKED_STRUCT(filelump_t
 {
-    int			filepos;
-    int			size;
-    char		name[8];
-}) filelump_t;
+int			filepos;
+int			size;
+char		name[8];
+});
 
 //
 // GLOBALS

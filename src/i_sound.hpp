@@ -28,9 +28,7 @@
 //
 // SoundFX struct.
 //
-typedef struct sfxinfo_struct	sfxinfo_t;
-
-struct sfxinfo_struct
+struct sfxinfo_t
 {
     // tag name, used for hexen.
     const char *tagname;
@@ -71,21 +69,25 @@ struct sfxinfo_struct
 //
 // MusicInfo struct.
 //
-typedef struct
+struct musicinfo_t
 {
-    // up to 6-character name
-    const char *name;
+// up to 6-character name
+const char *name;
 
-    // lump number of music
-    int lumpnum;
 
-    // music data
-    void *data;
+// lump number of music
+int lumpnum;
 
-    // music handle once registered
-    void *handle;
 
-} musicinfo_t;
+// music data
+void *data;
+
+
+// music handle once registered
+void *handle;
+
+
+};
 
 enum snddevice_t : int
 {
@@ -104,52 +106,72 @@ enum snddevice_t : int
 
 // Interface for sound modules
 
-typedef struct
+struct sound_module_t
 {
-    // List of sound devices that this sound module is used for.
+// List of sound devices that this sound module is used for.
 
-    snddevice_t *sound_devices;
-    int num_sound_devices;
 
-    // Initialise sound module
-    // Returns true if successfully initialised
+snddevice_t *sound_devices;
+int num_sound_devices;
 
-    boolean (*Init)(boolean use_sfx_prefix);
 
-    // Shutdown sound module
+// Initialise sound module
+// Returns true if successfully initialised
 
-    void (*Shutdown)(void);
 
-    // Returns the lump index of the given sound.
+boolean (*Init)(boolean use_sfx_prefix);
 
-    int (*GetSfxLumpNum)(sfxinfo_t *sfxinfo);
 
-    // Called periodically to update the subsystem.
+// Shutdown sound module
 
-    void (*Update)(void);
 
-    // Update the sound settings on the given channel.
+void (*Shutdown)(void);
 
-    void (*UpdateSoundParams)(int channel, int vol, int sep);
 
-    // Start a sound on a given channel.  Returns the channel id
-    // or -1 on failure.
+// Returns the lump index of the given sound.
 
-    int (*StartSound)(sfxinfo_t *sfxinfo, int channel, int vol, int sep, int pitch);
 
-    // Stop the sound playing on the given channel.
+int (*GetSfxLumpNum)(sfxinfo_t *sfxinfo);
 
-    void (*StopSound)(int channel);
 
-    // Query if a sound is playing on the given channel
+// Called periodically to update the subsystem.
 
-    boolean (*SoundIsPlaying)(int channel);
 
-    // Called on startup to precache sound effects (if necessary)
+void (*Update)(void);
 
-    void (*CacheSounds)(sfxinfo_t *sounds, int num_sounds);
 
-} sound_module_t;
+// Update the sound settings on the given channel.
+
+
+void (*UpdateSoundParams)(int channel, int vol, int sep);
+
+
+// Start a sound on a given channel.  Returns the channel id
+// or -1 on failure.
+
+
+int (*StartSound)(sfxinfo_t *sfxinfo, int channel, int vol, int sep, int pitch);
+
+
+// Stop the sound playing on the given channel.
+
+
+void (*StopSound)(int channel);
+
+
+// Query if a sound is playing on the given channel
+
+
+boolean (*SoundIsPlaying)(int channel);
+
+
+// Called on startup to precache sound effects (if necessary)
+
+
+void (*CacheSounds)(sfxinfo_t *sounds, int num_sounds);
+
+
+};
 
 void I_InitSound(boolean use_sfx_prefix);
 void I_ShutdownSound(void);
@@ -163,58 +185,81 @@ void I_PrecacheSounds(sfxinfo_t *sounds, int num_sounds);
 
 // Interface for music modules
 
-typedef struct
+struct music_module_t
 {
-    // List of sound devices that this music module is used for.
+// List of sound devices that this music module is used for.
 
-    snddevice_t *sound_devices;
-    int num_sound_devices;
 
-    // Initialise the music subsystem
+snddevice_t *sound_devices;
+int num_sound_devices;
 
-    boolean (*Init)(void);
 
-    // Shutdown the music subsystem
+// Initialise the music subsystem
 
-    void (*Shutdown)(void);
 
-    // Set music volume - range 0-127
+boolean (*Init)(void);
 
-    void (*SetMusicVolume)(int volume);
 
-    // Pause music
+// Shutdown the music subsystem
 
-    void (*PauseMusic)(void);
 
-    // Un-pause music
+void (*Shutdown)(void);
 
-    void (*ResumeMusic)(void);
 
-    // Register a song handle from data
-    // Returns a handle that can be used to play the song
+// Set music volume - range 0-127
 
-    void *(*RegisterSong)(void *data, int len);
 
-    // Un-register (free) song data
+void (*SetMusicVolume)(int volume);
 
-    void (*UnRegisterSong)(void *handle);
 
-    // Play the song
+// Pause music
 
-    void (*PlaySong)(void *handle, boolean looping);
 
-    // Stop playing the current song.
+void (*PauseMusic)(void);
 
-    void (*StopSong)(void);
 
-    // Query if music is playing.
+// Un-pause music
 
-    boolean (*MusicIsPlaying)(void);
 
-    // Invoked periodically to poll.
+void (*ResumeMusic)(void);
 
-    void (*Poll)(void);
-} music_module_t;
+
+// Register a song handle from data
+// Returns a handle that can be used to play the song
+
+
+void *(*RegisterSong)(void *data, int len);
+
+
+// Un-register (free) song data
+
+
+void (*UnRegisterSong)(void *handle);
+
+
+// Play the song
+
+
+void (*PlaySong)(void *handle, boolean looping);
+
+
+// Stop playing the current song.
+
+
+void (*StopSong)(void);
+
+
+// Query if music is playing.
+
+
+boolean (*MusicIsPlaying)(void);
+
+
+// Invoked periodically to poll.
+
+
+void (*Poll)(void);
+};
 
 void I_InitMusic(void);
 void I_ShutdownMusic(void);
@@ -238,11 +283,12 @@ extern int snd_pitchshift;
 void I_BindSoundVariables(void);
 
 // DMX version to emulate for OPL emulation:
-typedef enum {
-    opl_doom1_1_666,    // Doom 1 v1.666
-    opl_doom2_1_666,    // Doom 2 v1.666, Hexen, Heretic
-    opl_doom_1_9        // Doom v1.9, Strife
-} opl_driver_ver_t;
+enum opl_driver_ver_t
+{
+opl_doom1_1_666,    // Doom 1 v1.666
+opl_doom2_1_666,    // Doom 2 v1.666, Hexen, Heretic
+opl_doom_1_9        // Doom v1.9, Strife
+};
 
 void I_SetOPLDriverVer(opl_driver_ver_t ver);
 

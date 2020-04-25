@@ -23,23 +23,25 @@
 #include <stdio.h>
 #include "doomtype.hpp"
 
-typedef struct _wad_file_s wad_file_t;
+struct wad_file_t;
 
-typedef struct
+struct wad_file_class_t
 {
-    // Open a file for reading.
-    wad_file_t *(*OpenFile)(const char *path);
+// Open a file for reading.
+wad_file_t *(*OpenFile)(const char *path);
 
-    // Close the specified file.
-    void (*CloseFile)(wad_file_t *file);
 
-    // Read data from the specified position in the file into the 
-    // provided buffer.  Returns the number of bytes read.
-    size_t (*Read)(wad_file_t *file, unsigned int offset,
-                   void *buffer, size_t buffer_len);
-} wad_file_class_t;
+// Close the specified file.
+void (*CloseFile)(wad_file_t *file);
 
-struct _wad_file_s
+
+// Read data from the specified position in the file into the
+// provided buffer.  Returns the number of bytes read.
+size_t (*Read)(wad_file_t *file, unsigned int offset,
+void *buffer, size_t buffer_len);
+};
+
+struct wad_file_t
 {
     // Class of this file.
     wad_file_class_t *file_class;

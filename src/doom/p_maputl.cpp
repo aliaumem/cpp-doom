@@ -774,12 +774,12 @@ extern fixed_t bulletslope;
 // implementation of Intercepts Overrun emulation in PrBoom-plus
 // which this is based on.
 
-typedef struct
+struct intercepts_overrun_t
 {
-    int len;
-    void *addr;
-    boolean int16_array;
-} intercepts_overrun_t;
+int len;
+void *addr;
+boolean int16_array;
+};
 
 // Intercepts memory table.  This is where various variables are located
 // in memory in Vanilla Doom.  When the intercepts table overflows, we

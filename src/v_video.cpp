@@ -885,31 +885,36 @@ void V_RestoreBuffer(void)
 // SCREEN SHOTS
 //
 
-typedef PACKED_STRUCT (
+PACKED_STRUCT(pcx_t
 {
-    char		manufacturer;
-    char		version;
-    char		encoding;
-    char		bits_per_pixel;
+char		manufacturer;
+char		version;
+char		encoding;
+char		bits_per_pixel;
 
-    unsigned short	xmin;
-    unsigned short	ymin;
-    unsigned short	xmax;
-    unsigned short	ymax;
-    
-    unsigned short	hres;
-    unsigned short	vres;
 
-    unsigned char	palette[48];
-    
-    char		reserved;
-    char		color_planes;
-    unsigned short	bytes_per_line;
-    unsigned short	palette_type;
-    
-    char		filler[58];
-    unsigned char	data;		// unbounded
-}) pcx_t;
+unsigned short	xmin;
+unsigned short	ymin;
+unsigned short	xmax;
+unsigned short	ymax;
+
+
+unsigned short	hres;
+unsigned short	vres;
+
+
+unsigned char	palette[48];
+
+
+char		reserved;
+char		color_planes;
+unsigned short	bytes_per_line;
+unsigned short	palette_type;
+
+
+char		filler[58];
+unsigned char	data;		// unbounded
+});
 
 
 //

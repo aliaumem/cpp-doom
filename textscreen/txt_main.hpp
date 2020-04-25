@@ -96,32 +96,34 @@ enum txt_color_t
 
 // Modifier keys.
 
-typedef enum
+enum txt_modifier_t
 {
-    TXT_MOD_SHIFT,
-    TXT_MOD_CTRL,
-    TXT_MOD_ALT,
-    TXT_NUM_MODIFIERS
-} txt_modifier_t;
+TXT_MOD_SHIFT,
+TXT_MOD_CTRL,
+TXT_MOD_ALT,
+TXT_NUM_MODIFIERS
+};
 
 // Due to the way the SDL API works, we provide different ways of configuring
 // how we read input events, each of which is useful in different scenarios.
-typedef enum
+enum txt_input_mode_t
 {
-    // "Localized" output that takes software keyboard layout into account,
-    // but key shifting has no effect.
-    TXT_INPUT_NORMAL,
+// "Localized" output that takes software keyboard layout into account,
+// but key shifting has no effect.
+TXT_INPUT_NORMAL,
 
-    // "Raw" input; the keys correspond to physical keyboard layout and
-    // software keyboard layout has no effect.
-    TXT_INPUT_RAW,
 
-    // Used for full text input. Events are fully shifted and localized.
-    // However, not all keyboard keys will generate input.
-    // Setting this mode may activate the on-screen keyboard, depending on
-    // device and OS.
-    TXT_INPUT_TEXT,
-} txt_input_mode_t;
+// "Raw" input; the keys correspond to physical keyboard layout and
+// software keyboard layout has no effect.
+TXT_INPUT_RAW,
+
+
+// Used for full text input. Events are fully shifted and localized.
+// However, not all keyboard keys will generate input.
+// Setting this mode may activate the on-screen keyboard, depending on
+// device and OS.
+TXT_INPUT_TEXT,
+};
 
 
 #ifdef __GNUC__

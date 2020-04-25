@@ -34,11 +34,11 @@
  * When a checkbox is changed, it emits the "changed" signal.
  */
 
-typedef struct txt_checkbox_s txt_checkbox_t;
+struct txt_checkbox_t;
 
 #include "txt_widget.hpp"
 
-struct txt_checkbox_s
+struct txt_checkbox_t
 {
     txt_widget_t widget;
     char *label;

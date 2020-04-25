@@ -33,74 +33,78 @@
 #define BETWEEN(l,u,x) (((l)>(x))?(l):((x)>(u))?(u):(x))
 #endif
 
-typedef struct
+struct crispy_t
 {
-	// [crispy] "crispness" config variables
-	int automapoverlay;
-	int automaprotate;
-	int automapstats;
-	int bobfactor;
-	int brightmaps;
-	int centerweapon;
-	int coloredblood;
-	int coloredhud;
-	int crosshair;
-	int crosshairhealth;
-	int crosshairtarget;
-	int crosshairtype;
-	int demotimer;
-	int demotimerdir;
-	int demobar;
-	int extautomap;
-	int extsaveg;
-	int flipcorpses;
-	int freeaim;
-	int freelook;
-	int hires;
-	int jump;
-	int leveltime;
-	int mouselook;
-	int neghealth;
-	int overunder;
-	int pitch;
-	int playercoords;
-	int recoil;
-	int secretmessage;
-	int smoothlight;
-	int smoothscaling;
-	int soundfix;
-	int soundfull;
-	int soundmono;
-	int translucency;
+// [crispy] "crispness" config variables
+int automapoverlay;
+int automaprotate;
+int automapstats;
+int bobfactor;
+int brightmaps;
+int centerweapon;
+int coloredblood;
+int coloredhud;
+int crosshair;
+int crosshairhealth;
+int crosshairtarget;
+int crosshairtype;
+int demotimer;
+int demotimerdir;
+int demobar;
+int extautomap;
+int extsaveg;
+int flipcorpses;
+int freeaim;
+int freelook;
+int hires;
+int jump;
+int leveltime;
+int mouselook;
+int neghealth;
+int overunder;
+int pitch;
+int playercoords;
+int recoil;
+int secretmessage;
+int smoothlight;
+int smoothscaling;
+int soundfix;
+int soundfull;
+int soundmono;
+int translucency;
 #if CRISPY_TRUECOLOR
-	int truecolor;
+int truecolor;
 #endif
-	int uncapped;
-	int vsync;
-	int weaponsquat;
-	int widescreen;
+int uncapped;
+int vsync;
+int weaponsquat;
+int widescreen;
 
-	// [crispy] in-game switches and variables
-	int screenshotmsg;
-	int cleanscreenshot;
-	int demowarp;
-	int fps;
 
-	boolean flashinghom;
-	boolean fliplevels;
-	boolean flipweapons;
-	boolean haved1e5;
-	boolean havee1m10;
-	boolean havemap33;
-	boolean havessg;
-	boolean singleplayer;
-	boolean stretchsky;
+// [crispy] in-game switches and variables
+int screenshotmsg;
+int cleanscreenshot;
+int demowarp;
+int fps;
 
-	const char *sdlversion;
-	const char *platform;
 
-	void (*post_rendering_hook) (void);
-} crispy_t;
+boolean flashinghom;
+boolean fliplevels;
+boolean flipweapons;
+boolean haved1e5;
+boolean havee1m10;
+boolean havemap33;
+boolean havessg;
+boolean singleplayer;
+boolean stretchsky;
+
+
+const char *sdlversion;
+const char *platform;
+
+
+void (*post_rendering_hook) (void);
+};
 
 extern crispy_t *const crispy;
 extern const crispy_t *critical;

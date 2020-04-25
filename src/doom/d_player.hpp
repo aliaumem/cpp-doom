@@ -45,7 +45,7 @@
 //
 // Player states.
 //
-typedef enum
+enum playerstate_t
 {
     // Playing or camping.
     PST_LIVE,
@@ -54,13 +54,13 @@ typedef enum
     // Ready to restart/respawn???
     PST_REBORN		
 
-} playerstate_t;
 
+};
 
 //
 // Player internal flags, for cheats and debug.
 //
-typedef enum
+enum cheat_t
 {
     // No clipping, walk through barriers.
     CF_NOCLIP		= 1,
@@ -71,7 +71,7 @@ typedef enum
     // [crispy] monsters don't target
     CF_NOTARGET         = 8
 
-} cheat_t;
+};
 
 
 //
@@ -200,7 +200,7 @@ struct player_t
 // INTERMISSION
 // Structure passed e.g. to WI_Start(wb)
 //
-typedef struct
+struct wbplayerstruct_t
 {
     boolean	in;	// whether the player is in game
     
@@ -212,9 +212,10 @@ typedef struct
     int		frags[4];
     int		score;	// current score on entry, modified on return
   
-} wbplayerstruct_t;
 
-typedef struct
+};
+
+struct wbstartstruct_t
 {
     int		epsd;	// episode # (0-2)
 
@@ -240,7 +241,7 @@ typedef struct
 
     // [crispy] CPhipps - total game time for completed levels so far
     int		totaltimes;
-} wbstartstruct_t;
+};
 
 
 #endif

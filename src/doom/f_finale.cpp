@@ -41,12 +41,12 @@
 #include "m_random.hpp" // [crispy] Crispy_Random()
 #include "event_function_decls.hpp"
 
-typedef enum
+enum finalestage_t
 {
-    F_STAGE_TEXT,
-    F_STAGE_ARTSCREEN,
-    F_STAGE_CAST,
-} finalestage_t;
+F_STAGE_TEXT,
+F_STAGE_ARTSCREEN,
+F_STAGE_CAST,
+};
 
 // ?
 //#include "doomstat.hpp"
@@ -61,13 +61,13 @@ unsigned int finalecount;
 #define	TEXTSPEED	3
 #define	TEXTWAIT	250
 
-typedef struct
+struct textscreen_t
 {
-    GameMission_t mission;
-    int episode, level;
-    const char *background;
-    const char *text;
-} textscreen_t;
+GameMission_t mission;
+int episode, level;
+const char *background;
+const char *text;
+};
 
 static textscreen_t textscreens[] =
 {
@@ -372,11 +372,11 @@ void F_TextWrite (void)
 // Casting by id Software.
 //   in order of appearance
 //
-typedef struct
+struct castinfo_t
 {
-    const char	*name;
-    mobjtype_t	type;
-} castinfo_t;
+const char	*name;
+mobjtype_t	type;
+};
 
 castinfo_t	castorder[] = {
     {CC_ZOMBIE, MT_POSSESSED},
@@ -449,12 +449,12 @@ static int F_RandomizeSound (int sound)
 	}
 }
 
-typedef struct
+struct actionsound_t
 {
-	actionf_t action;
-	const int sound;
-	const boolean early;
-} actionsound_t;
+actionf_t action;
+const int sound;
+const boolean early;
+};
 
 static const actionsound_t actionsounds[] =
 {

@@ -40,7 +40,7 @@
  * action to activate the currently-selected widget.
  */
 
-typedef struct txt_window_s txt_window_t;
+struct txt_window_t;
 
 #include "txt_widget.hpp"
 #include "txt_table.hpp"
@@ -54,7 +54,7 @@ typedef int (*TxtWindowMousePress)(txt_window_t *window,
                                    int x, int y, int b,
                                    void *user_data);
 
-struct txt_window_s
+struct txt_window_t
 {
     // Base class: all windows are tables with one column.
 

@@ -34,10 +34,9 @@
 // WADFILE I/O related stuff.
 //
 
-typedef struct lumpinfo_s lumpinfo_t;
 typedef int lumpindex_t;
 
-struct lumpinfo_s
+struct lumpinfo_t
 {
     char	name[8];
     wad_file_t *wad_file;

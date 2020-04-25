@@ -64,23 +64,22 @@
 // Note: transformed values not buffered locally,
 //  like some DOOM-alikes ("wt", "WebView") did.
 //
-typedef struct
+struct vertex_t
 {
-    fixed_t	x;
-    fixed_t	y;
-    
-// [crispy] remove slime trails
-// vertex coordinates *only* used in rendering that have been
-// moved towards the linedef associated with their seg by projecting them
-// using the law of cosines in p_setup.c:P_RemoveSlimeTrails();
-    fixed_t	r_x;
-    fixed_t	r_y;
-    boolean	moved;
-} vertex_t;
+  fixed_t x;
+  fixed_t y;
 
+  // [crispy] remove slime trails
+  // vertex coordinates *only* used in rendering that have been
+  // moved towards the linedef associated with their seg by projecting them
+  // using the law of cosines in p_setup.c:P_RemoveSlimeTrails();
+  fixed_t r_x;
+  fixed_t r_y;
+  boolean moved;
+};
 
 // Forward of LineDefs, for Sectors.
-struct line_s;
+struct line_t;
 
 // Each sector has a degenmobj_t in its center
 //  for sound origin purposes.
@@ -88,20 +87,20 @@ struct line_s;
 //  moving objects (doppler), because
 //  position is prolly just buffered, not
 //  updated.
-typedef struct
+struct degenmobj_t
 {
     thinker_t		thinker;	// not used for anything
     fixed_t		x;
     fixed_t		y;
     fixed_t		z;
 
-} degenmobj_t;
+};
 
 //
 // The SECTORS record, at runtime.
 // Stores things/mobjs.
 //
-typedef	struct
+struct sector_t
 {
     fixed_t	floorheight;
     fixed_t	ceilingheight;
@@ -133,7 +132,7 @@ typedef	struct
     void*	specialdata;
 
     int			linecount;
-    struct line_s**	lines;	// [linecount] size
+    struct line_t**	lines;	// [linecount] size
     
     // [crispy] WiggleFix: [kb] for R_FixWiggle()
     int		cachedheight;
@@ -162,16 +161,16 @@ typedef	struct
 
     // [crispy] revealed secrets
     short	oldspecial;
-} sector_t;
 
 
 
+};
 
 //
 // The SideDef.
 //
 
-typedef struct
+struct side_t
 {
     // add this to the calculated texture column
     fixed_t	textureoffset;
@@ -190,67 +189,62 @@ typedef struct
     
     // [crispy] smooth texture scrolling
     fixed_t	basetextureoffset;
-} side_t;
 
 
+};
 
 //
 // Move clipping aid for LineDefs.
 //
-typedef enum
+enum slopetype_t
 {
-    ST_HORIZONTAL,
-    ST_VERTICAL,
-    ST_POSITIVE,
-    ST_NEGATIVE
+  ST_HORIZONTAL,
+  ST_VERTICAL,
+  ST_POSITIVE,
+  ST_NEGATIVE
 
-} slopetype_t;
+};
 
-
-
-typedef struct line_s
+struct line_t
 {
-    // Vertices, from v1 to v2.
-    vertex_t*	v1;
-    vertex_t*	v2;
+  // Vertices, from v1 to v2.
+  vertex_t *v1;
+  vertex_t *v2;
 
-    // Precalculated v2 - v1 for side checking.
-    fixed_t	dx;
-    fixed_t	dy;
+  // Precalculated v2 - v1 for side checking.
+  fixed_t dx;
+  fixed_t dy;
 
-    // Animation related.
-    unsigned short	flags; // [crispy] extended nodes
-    short	special;
-    short	tag;
+  // Animation related.
+  unsigned short flags; // [crispy] extended nodes
+  short special;
+  short tag;
 
-    // Visual appearance: SideDefs.
-    //  sidenum[1] will be -1 (NO_INDEX) if one sided
-    unsigned short	sidenum[2]; // [crispy] extended nodes
+  // Visual appearance: SideDefs.
+  //  sidenum[1] will be -1 (NO_INDEX) if one sided
+  unsigned short sidenum[2]; // [crispy] extended nodes
 
-    // Neat. Another bounding box, for the extent
-    //  of the LineDef.
-    fixed_t	bbox[4];
+  // Neat. Another bounding box, for the extent
+  //  of the LineDef.
+  fixed_t bbox[4];
 
-    // To aid move clipping.
-    slopetype_t	slopetype;
+  // To aid move clipping.
+  slopetype_t slopetype;
 
-    // Front and back sector.
-    // Note: redundant? Can be retrieved from SideDefs.
-    sector_t*	frontsector;
-    sector_t*	backsector;
+  // Front and back sector.
+  // Note: redundant? Can be retrieved from SideDefs.
+  sector_t *frontsector;
+  sector_t *backsector;
 
-    // if == validcount, already checked
-    int		validcount;
+  // if == validcount, already checked
+  int validcount;
 
-    // thinker_t for reversable actions
-    void*	specialdata;		
+  // thinker_t for reversable actions
+  void *specialdata;
 
-    // [crispy] calculate sound origin of line to be its midpoint
-    degenmobj_t	soundorg;
-} line_t;
-
-
-
+  // [crispy] calculate sound origin of line to be its midpoint
+  degenmobj_t soundorg;
+};
 
 //
 // A SubSector.
@@ -259,74 +253,61 @@ typedef struct line_s
 //  indicating the visible walls that define
 //  (all or some) sides of a convex BSP leaf.
 //
-typedef struct subsector_s
+struct subsector_t
 {
-    sector_t*	sector;
-    int	numlines; // [crispy] extended nodes
-    int	firstline; // [crispy] extended nodes
-    
-} subsector_t;
-
-
+  sector_t *sector;
+  int numlines;  // [crispy] extended nodes
+  int firstline; // [crispy] extended nodes
+};
 
 //
 // The LineSeg.
 //
-typedef struct
+struct seg_t
 {
-    vertex_t*	v1;
-    vertex_t*	v2;
-    
-    fixed_t	offset;
+  vertex_t *v1;
+  vertex_t *v2;
 
-    angle_t	angle;
+  fixed_t offset;
 
-    side_t*	sidedef;
-    line_t*	linedef;
+  angle_t angle;
 
-    // Sector references.
-    // Could be retrieved from linedef, too.
-    // backsector is NULL for one sided lines
-    sector_t*	frontsector;
-    sector_t*	backsector;
-    
-    uint32_t	length; // [crispy] fix long wall wobble
-    angle_t	r_angle; // [crispy] re-calculated angle used for rendering
-    int	fakecontrast;
-} seg_t;
+  side_t *sidedef;
+  line_t *linedef;
 
+  // Sector references.
+  // Could be retrieved from linedef, too.
+  // backsector is NULL for one sided lines
+  sector_t *frontsector;
+  sector_t *backsector;
 
+  uint32_t length; // [crispy] fix long wall wobble
+  angle_t r_angle; // [crispy] re-calculated angle used for rendering
+  int fakecontrast;
+};
 
 //
 // BSP node.
 //
-typedef struct
+struct node_t
 {
-    // Partition line.
-    fixed_t	x;
-    fixed_t	y;
-    fixed_t	dx;
-    fixed_t	dy;
+  // Partition line.
+  fixed_t x;
+  fixed_t y;
+  fixed_t dx;
+  fixed_t dy;
 
-    // Bounding box for each child.
-    fixed_t	bbox[2][4];
+  // Bounding box for each child.
+  fixed_t bbox[2][4];
 
-    // If NF_SUBSECTOR its a subsector.
-    int children[2]; // [crispy] extended nodes
-    
-} node_t;
-
-
-
+  // If NF_SUBSECTOR its a subsector.
+  int children[2]; // [crispy] extended nodes
+};
 
 // PC direct to screen pointers
-//B UNUSED - keep till detailshift in r_draw.c resolved
-//extern byte*	destview;
-//extern byte*	destscreen;
-
-
-
-
+// B UNUSED - keep till detailshift in r_draw.c resolved
+// extern byte*	destview;
+// extern byte*	destscreen;
 
 //
 // OTHER TYPES
@@ -337,91 +318,83 @@ typedef struct
 //  precalculating 24bpp lightmap/colormap LUT.
 //  from darkening PLAYPAL to all black.
 // Could even us emore than 32 levels.
-typedef pixel_t		lighttable_t;
-
-
-
+typedef pixel_t lighttable_t;
 
 //
 // ?
 //
-typedef struct drawseg_s
+struct drawseg_t
 {
-    seg_t*		curline;
-    int			x1;
-    int			x2;
+  seg_t *curline;
+  int x1;
+  int x2;
 
-    fixed_t		scale1;
-    fixed_t		scale2;
-    fixed_t		scalestep;
+  fixed_t scale1;
+  fixed_t scale2;
+  fixed_t scalestep;
 
-    // 0=none, 1=bottom, 2=top, 3=both
-    int			silhouette;
+  // 0=none, 1=bottom, 2=top, 3=both
+  int silhouette;
 
-    // do not clip sprites above this
-    fixed_t		bsilheight;
+  // do not clip sprites above this
+  fixed_t bsilheight;
 
-    // do not clip sprites below this
-    fixed_t		tsilheight;
-    
-    // Pointers to lists for sprite clipping,
-    //  all three adjusted so [x1] is first value.
-    int*		sprtopclip; // [crispy] 32-bit integer math
-    int*		sprbottomclip; // [crispy] 32-bit integer math
-    int*		maskedtexturecol; // [crispy] 32-bit integer math
-    
-} drawseg_t;
+  // do not clip sprites below this
+  fixed_t tsilheight;
 
-
+  // Pointers to lists for sprite clipping,
+  //  all three adjusted so [x1] is first value.
+  int *sprtopclip;       // [crispy] 32-bit integer math
+  int *sprbottomclip;    // [crispy] 32-bit integer math
+  int *maskedtexturecol; // [crispy] 32-bit integer math
+};
 
 // A vissprite_t is a thing
 //  that will be drawn during a refresh.
 // I.e. a sprite object that is partly visible.
-typedef struct vissprite_s
+struct vissprite_t
 {
-    // Doubly linked list.
-    struct vissprite_s*	prev;
-    struct vissprite_s*	next;
-    
-    int			x1;
-    int			x2;
+  // Doubly linked list.
+  vissprite_t *prev;
+  vissprite_t *next;
 
-    // for line side calculation
-    fixed_t		gx;
-    fixed_t		gy;		
+  int x1;
+  int x2;
 
-    // global bottom / top for silhouette clipping
-    fixed_t		gz;
-    fixed_t		gzt;
+  // for line side calculation
+  fixed_t gx;
+  fixed_t gy;
 
-    // horizontal position of x1
-    fixed_t		startfrac;
-    
-    fixed_t		scale;
-    
-    // negative if flipped
-    fixed_t		xiscale;	
+  // global bottom / top for silhouette clipping
+  fixed_t gz;
+  fixed_t gzt;
 
-    fixed_t		texturemid;
-    int			patch;
+  // horizontal position of x1
+  fixed_t startfrac;
 
-    // for color translation and shadow draw,
-    //  maxbright frames as well
-    // [crispy] brightmaps for select sprites
-    lighttable_t*	colormap[2];
-    byte		*brightmap;
-   
-    int			mobjflags;
-    // [crispy] color translation table for blood colored by monster class
-    byte*			translation;
+  fixed_t scale;
+
+  // negative if flipped
+  fixed_t xiscale;
+
+  fixed_t texturemid;
+  int patch;
+
+  // for color translation and shadow draw,
+  //  maxbright frames as well
+  // [crispy] brightmaps for select sprites
+  lighttable_t *colormap[2];
+  byte *brightmap;
+
+  int mobjflags;
+  // [crispy] color translation table for blood colored by monster class
+  byte *translation;
 #ifdef CRISPY_TRUECOLOR
-    const pixel_t	(*blendfunc)(const pixel_t fg, const pixel_t bg);
+  const pixel_t (*blendfunc)(const pixel_t fg, const pixel_t bg);
 #endif
-    
-} vissprite_t;
+};
 
-
-//	
+//
 // Sprites are patches with a special naming convention
 //  so they can be recognized by R_InitSprites.
 // The base name is NNNNFx or NNNNFxFx, with
@@ -436,69 +409,60 @@ typedef struct vissprite_s
 // Some sprites will only have one picture used
 // for all views: NNNNF0
 //
-typedef struct
+struct spriteframe_t
 {
-    // If false use 0 for any position.
-    // Note: as eight entries are available,
-    //  we might as well insert the same name eight times.
-    int	rotate; // [crispy] we use a value of 2 for 16 sprite rotations
+  // If false use 0 for any position.
+  // Note: as eight entries are available,
+  //  we might as well insert the same name eight times.
+  int rotate; // [crispy] we use a value of 2 for 16 sprite rotations
 
-    // Lump to use for view angles 0-7.
-    short	lump[16]; // [crispy] support 16 sprite rotations
+  // Lump to use for view angles 0-7.
+  short lump[16]; // [crispy] support 16 sprite rotations
 
-    // Flip bit (1 = flip) to use for view angles 0-7.
-    byte	flip[16]; // [crispy] support 16 sprite rotations
-    
-} spriteframe_t;
-
-
+  // Flip bit (1 = flip) to use for view angles 0-7.
+  byte flip[16]; // [crispy] support 16 sprite rotations
+};
 
 //
 // A sprite definition:
 //  a number of animation frames.
 //
-typedef struct
+struct spritedef_t
 {
-    int			numframes;
-    spriteframe_t*	spriteframes;
-
-} spritedef_t;
-
-
+  int numframes;
+  spriteframe_t *spriteframes;
+};
 
 //
 // Now what is a visplane, anyway?
-// 
-typedef struct
+//
+struct visplane_t
 {
-  fixed_t		height;
-  int			picnum;
-  int			lightlevel;
-  int			minx;
-  int			maxx;
-  
+  fixed_t height;
+  int picnum;
+  int lightlevel;
+  int minx;
+  int maxx;
+
   // leave pads for [minx-1]/[maxx+1]
-  
-  unsigned int		pad1; // [crispy] hires / 32-bit integer math
+
+  unsigned int pad1; // [crispy] hires / 32-bit integer math
   // Here lies the rub for all
   //  dynamic resize/change of resolution.
-  unsigned int		top[MAXWIDTH]; // [crispy] hires / 32-bit integer math
-  unsigned int		pad2; // [crispy] hires / 32-bit integer math
-  unsigned int		pad3; // [crispy] hires / 32-bit integer math
+  unsigned int top[MAXWIDTH]; // [crispy] hires / 32-bit integer math
+  unsigned int pad2;          // [crispy] hires / 32-bit integer math
+  unsigned int pad3;          // [crispy] hires / 32-bit integer math
   // See above.
-  unsigned int		bottom[MAXWIDTH]; // [crispy] hires / 32-bit integer math
-  unsigned int		pad4; // [crispy] hires / 32-bit integer math
+  unsigned int bottom[MAXWIDTH]; // [crispy] hires / 32-bit integer math
+  unsigned int pad4;             // [crispy] hires / 32-bit integer math
+};
 
-} visplane_t;
-
-typedef struct
+struct laserpatch_t
 {
-	char c;
-	char a[9];
-	int l, w, h;
-} laserpatch_t;
+  char c;
+  char a[9];
+  int l, w, h;
+};
 extern laserpatch_t *laserpatch;
-
-
 
 #endif

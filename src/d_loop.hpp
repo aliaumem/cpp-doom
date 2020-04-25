@@ -28,25 +28,32 @@
 typedef boolean (*netgame_startup_callback_t)(int ready_players,
                                               int num_players);
 
-typedef struct
+struct loop_interface_t
 {
-    // Read events from the event queue, and process them.
+// Read events from the event queue, and process them.
 
-    void (*ProcessEvents)();
 
-    // Given the current input state, fill in the fields of the specified
-    // ticcmd_t structure with data for a new tic.
+void (*ProcessEvents)();
 
-    void (*BuildTiccmd)(ticcmd_t *cmd, int maketic);
 
-    // Advance the game forward one tic, using the specified player input.
+// Given the current input state, fill in the fields of the specified
+// ticcmd_t structure with data for a new tic.
 
-    void (*RunTic)(ticcmd_t *cmds, boolean *ingame);
 
-    // Run the menu (runs independently of the game).
+void (*BuildTiccmd)(ticcmd_t *cmd, int maketic);
 
-    void (*RunMenu)();
-} loop_interface_t;
+
+// Advance the game forward one tic, using the specified player input.
+
+
+void (*RunTic)(ticcmd_t *cmds, boolean *ingame);
+
+
+// Run the menu (runs independently of the game).
+
+
+void (*RunMenu)();
+};
 
 // Register callback functions for the main loop code to use.
 void D_RegisterLoopCallbacks(loop_interface_t *i);
