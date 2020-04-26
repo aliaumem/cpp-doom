@@ -245,7 +245,7 @@ void T_MoveFloor(floormove_t* floor)
 		break;
 	    }
 	}
-	P_RemoveThinker(&floor->thinker);
+	floor->thinker.remove();
 
 	S_StartSound(&floor->sector->soundorg, sfx_pstop);
     }
@@ -277,7 +277,7 @@ void T_MoveGoobers (floormove_t *floor)
     if ((res1 & res2) == pastdest)
     {
 	floor->sector->specialdata = NULL;
-	P_RemoveThinker(&floor->thinker);
+	floor->thinker.remove();
 
 	S_StartSound(&floor->sector->soundorg, sfx_pstop);
     }
@@ -299,14 +299,14 @@ void EV_DoGoobers (void)
 	if (sec->specialdata)
 	{
 	    floor = static_cast<floormove_t *>(sec->specialdata);
-	    P_RemoveThinker(&floor->thinker);
+	    floor->thinker.remove();
 	    sec->specialdata = NULL;
 	}
 
 	floor = zmalloc<decltype(floor)>(sizeof(*floor), PU_LEVSPEC, 0);
 	P_AddThinker(&floor->thinker);
 	sec->specialdata = floor;
-	floor->thinker.function.acp1() = (actionf_p1) T_MoveGoobers;
+	floor->thinker.function =  T_MoveGoobers;
 	floor->sector = sec;
 	// [crispy] actually destination ceilingheight here (destination floorheight is always 0),
 	// leave destination ceilingheight for untagged closed sectors (i.e. DR-type doors) at 0,
@@ -349,7 +349,7 @@ EV_DoFloor
 	floor = zmalloc<decltype(floor)> (sizeof(*floor), PU_LEVSPEC, 0);
 	P_AddThinker (&floor->thinker);
 	sec->specialdata = floor;
-	floor->thinker.function.acp1() = (actionf_p1) T_MoveFloor;
+	floor->thinker.function =  T_MoveFloor;
 	floor->type = floortype;
 	floor->crush = false;
 
@@ -553,7 +553,7 @@ EV_BuildStairs
 	floor = zmalloc<decltype(floor)> (sizeof(*floor), PU_LEVSPEC, 0);
 	P_AddThinker (&floor->thinker);
 	sec->specialdata = floor;
-	floor->thinker.function.acp1() = (actionf_p1) T_MoveFloor;
+	floor->thinker.function =  T_MoveFloor;
 	floor->direction = 1;
 	floor->sector = sec;
 	switch(type)
@@ -614,7 +614,7 @@ EV_BuildStairs
 		P_AddThinker (&floor->thinker);
 
 		sec->specialdata = floor;
-		floor->thinker.function.acp1() = (actionf_p1) T_MoveFloor;
+		floor->thinker.function =  T_MoveFloor;
 		floor->direction = 1;
 		floor->sector = sec;
 		floor->speed = speed;

@@ -89,11 +89,10 @@ struct line_t;
 //  updated.
 struct degenmobj_t
 {
-    thinker_t		thinker;	// not used for anything
+    bool		is_set;
     fixed_t		x;
     fixed_t		y;
     fixed_t		z;
-
 };
 
 //

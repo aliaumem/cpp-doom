@@ -887,7 +887,7 @@ static void R_DrawLSprite (void)
     P_LineLaser(viewplayer->mo, viewangle,
                 16*64*FRACUNIT, PLAYER_SLOPE(viewplayer));
 
-    if (!laserspot->thinker.function.acv())
+    if (!laserspot->is_set)
 	return;
 
     tz = FixedMul(laserspot->x - viewx, viewcos) +

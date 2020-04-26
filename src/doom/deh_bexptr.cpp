@@ -31,7 +31,7 @@ struct bex_codeptr_t {
     const actionf_t pointer;
 };
 
-static const bex_codeptr_t bex_codeptrtable[] = {
+static constexpr const bex_codeptr_t bex_codeptrtable[] = {
     {"Light0", {A_Light0}},
     {"WeaponReady", {A_WeaponReady}},
     {"Lower", {A_Lower}},

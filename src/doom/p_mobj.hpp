@@ -202,13 +202,16 @@ enum mobjflag_t
 
 };
 
-
-// Map Object definition.
-struct mobj_t
+struct mobj_thinker
 {
     // List: thinker links.
     thinker_t		thinker;
 
+    //virtual void think() {};
+};
+// Map Object definition.
+struct mobj_t : mobj_thinker
+{
     // Info for drawing: position.
     fixed_t		x;
     fixed_t		y;

@@ -76,9 +76,8 @@ P_SetMobjState
 
 	// Modified handling.
 	// Call action functions when the state is set
-	if (st->action.acp3())
-	    st->action.acp3()(mobj, NULL, NULL); // [crispy] let pspr action pointers get called from mobj states
-	
+	st->action.call_if(mobj);
+
 	state = st->nextstate;
 
 	if (cycle_counter++ > MOBJ_CYCLE_LIMIT)
@@ -109,7 +108,7 @@ static statenum_t P_LatestSafeState(statenum_t state)
 	    safestate = state;
 	}
 
-	if (states[state].action.acp1())
+	if (states[state].action)
 	{
 	    safestate = S_NULL;
 	}
@@ -564,17 +563,15 @@ void P_MobjThinker (mobj_t* mobj)
     {
 	P_XYMovement (mobj);
 
-	// FIXME: decent NOP/NULL/Nil function pointer please.
-	if (mobj->thinker.function.acv() == (actionf_v) (-1))
+	if (mobj->thinker.function.is_removed())
 	    return;		// mobj was removed
     }
     if ( (mobj->z != mobj->floorz)
 	 || mobj->momz )
     {
 	P_ZMovement (mobj);
-	
-	// FIXME: decent NOP/NULL/Nil function pointer please.
-	if (mobj->thinker.function.acv() == (actionf_v) (-1))
+
+	if (mobj->thinker.function.is_removed())
 	    return;		// mobj was removed
     }
 
@@ -686,7 +683,7 @@ P_SpawnMobjSafe
     mobj->oldz = mobj->z;
     mobj->oldangle = mobj->angle;
 
-    mobj->thinker.function.acp1() = (actionf_p1)P_MobjThinker;
+    mobj->thinker.function = P_MobjThinker;
 	
     P_AddThinker (&mobj->thinker);
 
@@ -743,7 +740,7 @@ void P_RemoveMobj (mobj_t* mobj)
     }
     
     // free block
-    P_RemoveThinker ((thinker_t*)mobj);
+    mobj->thinker.remove();
 }
 
 

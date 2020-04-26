@@ -125,9 +125,9 @@ int EV_DoDonut(line_t* line);
 //
 // P_LIGHTS
 //
-struct fireflicker_t
+struct fireflicker_t : mobj_thinker
 {
-    thinker_t	thinker;
+
     sector_t*	sector;
     int		count;
     int		maxlight;
@@ -137,45 +137,37 @@ struct fireflicker_t
 
 
 
-struct lightflash_t
+struct lightflash_t : mobj_thinker
 {
-thinker_t	thinker;
-sector_t*	sector;
-int		count;
-int		maxlight;
-int		minlight;
-int		maxtime;
-int		mintime;
-
-
+    sector_t*	sector;
+    int		count;
+    int		maxlight;
+    int		minlight;
+    int		maxtime;
+    int		mintime;
 };
 
 
 
-struct strobe_t
+struct strobe_t : mobj_thinker
 {
-thinker_t	thinker;
-sector_t*	sector;
-int		count;
-int		minlight;
-int		maxlight;
-int		darktime;
-int		brighttime;
-
-
+    sector_t*	sector;
+    int		count;
+    int		minlight;
+    int		maxlight;
+    int		darktime;
+    int		brighttime;
 };
 
 
 
 
-struct glow_t
+struct glow_t : mobj_thinker
 {
-    thinker_t	thinker;
     sector_t*	sector;
     int		minlight;
     int		maxlight;
     int		direction;
-
 };
 
 
@@ -294,22 +286,19 @@ blazeDWUS
 
 
 
-struct plat_t
+struct plat_t : mobj_thinker
 {
-thinker_t	thinker;
-sector_t*	sector;
-fixed_t	speed;
-fixed_t	low;
-fixed_t	high;
-int		wait;
-int		count;
-plat_e	status;
-plat_e	oldstatus;
-boolean	crush;
-int		tag;
-plattype_e	type;
-
-
+    sector_t*	sector;
+    fixed_t	speed;
+    fixed_t	low;
+    fixed_t	high;
+    int		wait;
+    int		count;
+    plat_e	status;
+    plat_e	oldstatus;
+    boolean	crush;
+    int		tag;
+    plattype_e	type;
 };
 
 
@@ -353,9 +342,8 @@ enum vldoor_e
 
 
 
-struct vldoor_t
+struct vldoor_t : mobj_thinker
 {
-    thinker_t	thinker;
     vldoor_e	type;
     sector_t*	sector;
     fixed_t	topheight;
@@ -369,7 +357,8 @@ struct vldoor_t
     // (keep in case a door going down is reset)
     // when it reaches 0, start going down
     int             topcountdown;
-    
+
+    //void think() override;
 };
 
 
@@ -501,11 +490,8 @@ enum ceiling_e
 
 };
 
-
-
-struct ceiling_t
+struct ceiling_t : mobj_thinker
 {
-    thinker_t	thinker;
     ceiling_e	type;
     sector_t*	sector;
     fixed_t	bottomheight;
@@ -519,7 +505,8 @@ struct ceiling_t
     // ID
     int		tag;                   
     int		olddirection;
-    
+
+    //void think() override;
 };
 
 
@@ -594,9 +581,8 @@ enum stair_e
 
 
 
-struct floormove_t
+struct floormove_t : mobj_thinker
 {
-    thinker_t	thinker;
     floor_e	type;
     boolean	crush;
     sector_t*	sector;

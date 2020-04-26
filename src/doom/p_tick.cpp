@@ -71,11 +71,10 @@ void P_AddThinker (thinker_t* thinker)
 // Deallocation is lazy -- it will not actually be freed
 // until its thinking turn comes up.
 //
-void P_RemoveThinker (thinker_t* thinker)
+/*void P_RemoveThinker (thinker_t* thinker)
 {
-  // FIXME: NOP.
-  thinker->function = actionf_t(-1);
-}
+  thinker->function.remove();
+}*/
 
 
 
@@ -99,7 +98,7 @@ void P_RunThinkers (void)
     currentthinker = thinkercap.next;
     while (currentthinker != &thinkercap)
     {
-	if ( currentthinker->function.acv() == (actionf_v)(-1) )
+	if ( currentthinker->function.is_removed())
 	{
 	    // time to remove it
             nextthinker = currentthinker->next;
@@ -109,9 +108,7 @@ void P_RunThinkers (void)
 	}
 	else
 	{
-	    if (currentthinker->function.acp1())
-		currentthinker->function.acp1() (
-                  reinterpret_cast<mobj_t *>(currentthinker));
+	    currentthinker->function.call_if(reinterpret_cast<mobj_thinker *>(currentthinker));
             nextthinker = currentthinker->next;
 	}
 	currentthinker = nextthinker;
