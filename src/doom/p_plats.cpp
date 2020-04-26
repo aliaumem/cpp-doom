@@ -161,7 +161,7 @@ EV_DoPlat
 	// Find lowest & highest floors around sector
 	rtn = 1;
 	plat = zmalloc<decltype(plat)>( sizeof(*plat), PU_LEVSPEC, 0);
-	P_AddThinker(&plat->thinker);
+	thinker_list::instance.push_back(plat);
 		
 	plat->type = type;
 	plat->sector = sec;
@@ -294,7 +294,7 @@ void P_RemoveActivePlat(plat_t* plat)
 	if (plat == activeplats[i])
 	{
 	    (activeplats[i])->sector->specialdata = NULL;
-	    (activeplats[i])->thinker.remove();
+		(activeplats[i])->thinker.mark_for_removal();
 	    activeplats[i] = NULL;
 	    
 	    return;

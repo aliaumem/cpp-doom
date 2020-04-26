@@ -247,13 +247,11 @@ static void saveg_write_mapthing_t(mapthing_t *str)
 
 static void saveg_read_actionf_t(actionf_t *str)
 {
-    // actionf_p1 acp1;
     *str = saveg_readp();
 }
 
 static void saveg_write_actionf_t(actionf_t *str)
 {
-    // actionf_p1 acp1;
   saveg_writep(str->as_void());
 }
 
@@ -272,25 +270,15 @@ static void saveg_write_actionf_t(actionf_t *str)
 
 static void saveg_read_thinker_t(thinker_t *str)
 {
-    // struct thinker_t* prev;
-    str->prev = static_cast<thinker_t *>(saveg_readp());
-
-    // struct thinker_t* next;
-    str->next = static_cast<thinker_t *>(saveg_readp());
-
-    // think_t function;
+    str->prev = reinterpret_cast<thinker_t *>(saveg_readp());
+    str->next = reinterpret_cast<thinker_t *>(saveg_readp());
     saveg_read_think_t(&str->function);
 }
 
 static void saveg_write_thinker_t(thinker_t *str)
 {
-    // struct thinker_t* prev;
     saveg_writep(str->prev);
-
-    // struct thinker_t* next;
     saveg_writep(str->next);
-
-    // think_t function;
     saveg_write_think_t(&str->function);
 }
 
@@ -419,23 +407,31 @@ static void saveg_read_mobj_t(mobj_t *str)
     str->tracer = static_cast<mobj_t *>(saveg_readp());
 }
 
-// [crispy] enumerate all thinker pointers
-uint32_t P_ThinkerToIndex (thinker_t* thinker)
+uint32_t  P_ThinkerToIndex(thinker_t* thinker)
 {
-    thinker_t*	th;
-    uint32_t	i;
+    return thinker_list::instance.index_of(thinker);
+}
 
+// [crispy] enumerate all thinker pointers
+uint32_t P_ThinkerToIndex (thinker_t& thinker)
+{
+    return thinker_list::instance.index_of(&thinker);
+}
+
+uint32_t thinker_list::index_of(thinker_t *thinker)
+{
     if (!thinker)
-	return 0;
+        return 0;
 
-    for (th = thinkercap.next, i = 0; th != &thinkercap; th = th->next)
+    uint32_t	i = 0;
+    for (thinker_t* th : *this)
     {
-	if (th->function ==  P_MobjThinker)
-	{
-	    i++;
-	    if (th == thinker)
-		return i;
-	}
+        if (thinker_cast<mobj_t>(th))
+        {
+            ++i;
+            if (th == thinker)
+                return i;
+        }
     }
 
     return 0;
@@ -444,25 +440,31 @@ uint32_t P_ThinkerToIndex (thinker_t* thinker)
 // [crispy] replace indizes with corresponding pointers
 thinker_t* P_IndexToThinker (uint32_t index)
 {
-    thinker_t*	th;
-    uint32_t	i;
+    thinker_t* thinker = thinker_list::instance.at(index);
 
+    if(!thinker)
+        restoretargets_fail++;
+
+    return thinker;
+}
+
+constexpr thinker_t* thinker_list::at(uintptr_t index)
+{
     if (!index)
-	return NULL;
+        return nullptr;
 
-    for (th = thinkercap.next, i = 0; th != &thinkercap; th = th->next)
+    uint32_t	i = 0;
+    for (auto* th : *this)
     {
-	if (th->function ==  P_MobjThinker)
-	{
-	    i++;
-	    if (i == index)
-		return th;
-	}
+        if (th->function ==  P_MobjThinker)
+        {
+            ++i;
+            if (i == index)
+                return th;
+        }
     }
 
-    restoretargets_fail++;
-
-    return NULL;
+    return nullptr;
 }
 
 static void saveg_write_mobj_t(mobj_t *str)
@@ -554,7 +556,7 @@ static void saveg_write_mobj_t(mobj_t *str)
     // struct mobj_s* target;
     // [crispy] instead of the actual pointer, store the
     // corresponding index in the mobj->target field
-    saveg_writep((void *)(uintptr_t) P_ThinkerToIndex((thinker_t *) str->target));
+    saveg_writep(reinterpret_cast<void *>(static_cast<uintptr_t>(P_ThinkerToIndex(str->target->thinker))));
 
     // int reactiontime;
     saveg_write32(str->reactiontime);
@@ -581,7 +583,7 @@ static void saveg_write_mobj_t(mobj_t *str)
     // struct mobj_s* tracer;
     // [crispy] instead of the actual pointer, store the
     // corresponding index in the mobj->tracers field
-    saveg_writep((void *)(uintptr_t) P_ThinkerToIndex((thinker_t *) str->tracer));
+    saveg_writep(reinterpret_cast<void *>(static_cast<uintptr_t>(P_ThinkerToIndex(str->tracer->thinker))));
 }
 
 
@@ -1664,16 +1666,14 @@ tc_mobj
 //
 void P_ArchiveThinkers (void)
 {
-    thinker_t*		th;
-
     // save off the current thinkers
-    for (th = thinkercap.next ; th != &thinkercap ; th=th->next)
+    for (auto *th : thinker_list::instance)
     {
-	if (th->function == P_MobjThinker)
+	if (auto*const mo = thinker_cast<mobj_t>(th); mo)
 	{
             saveg_write8(tc_mobj);
-	    saveg_write_pad();
-            saveg_write_mobj_t((mobj_t *) th);
+	        saveg_write_pad();
+            saveg_write_mobj_t(mo);
 
 	    continue;
 	}
@@ -1693,24 +1693,17 @@ void P_ArchiveThinkers (void)
 void P_UnArchiveThinkers (void)
 {
     byte		tclass;
-    thinker_t*		currentthinker;
-    thinker_t*		next;
     mobj_t*		mobj;
     
     // remove all the current thinkers
-    currentthinker = thinkercap.next;
-    while (currentthinker != &thinkercap)
+    for(auto* currentthinker : thinker_list::instance)
     {
-	next = currentthinker->next;
-	
-	if (currentthinker->function == P_MobjThinker)
-	    P_RemoveMobj ((mobj_t *)currentthinker);
+	if (auto* mo = thinker_cast<mobj_t>(currentthinker); mo)
+	    P_RemoveMobj (mo);
 	else
 	    Z_Free (currentthinker);
-
-	currentthinker = next;
     }
-    P_InitThinkers ();
+    thinker_list::instance.init ();
     
     // read in saved thinkers
     while (1)
@@ -1735,7 +1728,7 @@ void P_UnArchiveThinkers (void)
 //	    mobj->floorz = mobj->subsector->sector->floorheight;
 //	    mobj->ceilingz = mobj->subsector->sector->ceilingheight;
 	    mobj->thinker.function = P_MobjThinker;
-	    P_AddThinker (&mobj->thinker);
+	    thinker_list::instance.push_back(mobj);
 	    break;
 
 	  default:
@@ -1751,15 +1744,14 @@ void P_UnArchiveThinkers (void)
 void P_RestoreTargets (void)
 {
     mobj_t*	mo;
-    thinker_t*	th;
 
-    for (th = thinkercap.next; th != &thinkercap; th = th->next)
+    for (auto* th : thinker_list::instance)
     {
 	if (th->function ==  P_MobjThinker)
 	{
 	    mo = (mobj_t*) th;
-	    mo->target = (mobj_t*) P_IndexToThinker((uintptr_t) mo->target);
-	    mo->tracer = (mobj_t*) P_IndexToThinker((uintptr_t) mo->tracer);
+	    mo->target = (mobj_t*) P_IndexToThinker(reinterpret_cast<uintptr_t>(mo->target));
+	    mo->tracer = (mobj_t*) P_IndexToThinker(reinterpret_cast<uintptr_t>(mo->tracer));
 	}
     }
 
@@ -1801,11 +1793,10 @@ enum
 //
 void P_ArchiveSpecials (void)
 {
-    thinker_t*		th;
     int			i;
 	
     // save off the current thinkers
-    for (th = thinkercap.next ; th != &thinkercap ; th=th->next)
+    for (auto* th : thinker_list::instance)
     {
 	if (th->function)
 	{
@@ -1930,7 +1921,7 @@ void P_UnArchiveSpecials (void)
 	    if (ceiling->thinker.function)
 		ceiling->thinker.function = T_MoveCeiling;
 
-	    P_AddThinker (&ceiling->thinker);
+	    thinker_list::instance.push_back(ceiling);
 	    P_AddActiveCeiling(ceiling);
 	    break;
 				
@@ -1940,7 +1931,7 @@ void P_UnArchiveSpecials (void)
             saveg_read_vldoor_t(door);
 	    door->sector->specialdata = door;
 	    door->thinker.function = T_VerticalDoor;
-	    P_AddThinker (&door->thinker);
+	    thinker_list::instance.push_back(door);
 	    break;
 				
 	  case tc_floor:
@@ -1949,7 +1940,7 @@ void P_UnArchiveSpecials (void)
             saveg_read_floormove_t(floor);
 	    floor->sector->specialdata = floor;
 	    floor->thinker.function = T_MoveFloor;
-	    P_AddThinker (&floor->thinker);
+	    thinker_list::instance.push_back(floor);
 	    break;
 				
 	  case tc_plat:
@@ -1961,7 +1952,7 @@ void P_UnArchiveSpecials (void)
 	    if (plat->thinker.function)
 		plat->thinker.function = T_PlatRaise;
 
-	    P_AddThinker (&plat->thinker);
+	    thinker_list::instance.push_back(plat);
 	    P_AddActivePlat(plat);
 	    break;
 				
@@ -1970,7 +1961,7 @@ void P_UnArchiveSpecials (void)
 	    flash = zmalloc<decltype(flash)> (sizeof(*flash), PU_LEVEL, NULL);
             saveg_read_lightflash_t(flash);
 	    flash->thinker.function = T_LightFlash;
-	    P_AddThinker (&flash->thinker);
+	    thinker_list::instance.push_back(flash);
 	    break;
 				
 	  case tc_strobe:
@@ -1978,7 +1969,7 @@ void P_UnArchiveSpecials (void)
 	    strobe = zmalloc<decltype(strobe)> (sizeof(*strobe), PU_LEVEL, NULL);
             saveg_read_strobe_t(strobe);
 	    strobe->thinker.function = T_StrobeFlash;
-	    P_AddThinker (&strobe->thinker);
+	    thinker_list::instance.push_back(strobe);
 	    break;
 				
 	  case tc_glow:
@@ -1986,7 +1977,7 @@ void P_UnArchiveSpecials (void)
 	    glow = zmalloc<decltype(glow)> (sizeof(*glow), PU_LEVEL, NULL);
             saveg_read_glow_t(glow);
 	    glow->thinker.function = T_Glow;
-	    P_AddThinker (&glow->thinker);
+	    thinker_list::instance.push_back(glow);
 	    break;
 				
 	  default:

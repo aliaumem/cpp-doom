@@ -22,6 +22,7 @@
 #pragma once
 
 #include <variant>
+#include <cstdint>
 
 
 
@@ -44,6 +45,7 @@ struct glow_t;
 struct plat_t;
 struct strobe_t;
 struct lightflash_t;
+struct thinker_t;
 
 struct action_removed{};
 
@@ -97,12 +99,6 @@ struct actionf_t {
         }
     };
     std::variant<std::monostate, actionf_v, action_removed, actionf_p3, action1> value;
-
-    template <typename Arg>
-    static void perform(void (*f)(Arg), mobj_thinker* val)
-    {
-        f(reinterpret_cast<Arg>(val));
-    }
 public:
 
     auto& acv() { return std::get<actionf_v>(value); }
@@ -183,6 +179,11 @@ public:
         return true;
     }
 
+    bool call_if(thinker_t* t) const
+    {
+        return call_if(reinterpret_cast<mobj_thinker*>(t));
+    }
+
     constexpr bool call_if(mobj_t* mo, player_t* player, pspdef_t* psp)
     {
         if(std::holds_alternative<actionf_p3>(value))
@@ -217,18 +218,151 @@ private:
 // Historically, "think_t" is yet another
 //  function pointer to a routine to handle
 //  an actor.
-typedef actionf_t  think_t;
+//typedef actionf_t  think_t;
 
+struct thinker_t;
+extern void P_MobjThinker(mobj_t*);
 
 // Doubly linked list of actors.
 struct thinker_t
 {
     struct thinker_t*	prev;
     struct thinker_t*	next;
-    think_t		function;
+    actionf_t		function;
 
-    void remove()
+    //
+    // P_RemoveThinker
+    // Deallocation is lazy -- it will not actually be freed
+    // until its thinking turn comes up.
+    //
+    constexpr void mark_for_removal()
     {
         function.remove();
     }
+
+    constexpr bool needs_removal()
+    {
+        return function.is_removed();
+    }
 };
+
+template <typename T>
+struct thinker_trait;
+
+template <typename T>
+T* thinker_cast(thinker_t* th)
+{
+    if(th->function == thinker_trait<T>::func)
+        return reinterpret_cast<T*>(th);
+    return nullptr;
+}
+
+template<>
+struct thinker_trait<mobj_t>
+{
+    static constexpr const auto func = P_MobjThinker;
+};
+
+struct mobj_thinker
+{
+    // List: thinker links.
+    thinker_t		thinker;
+};
+
+class thinker_list
+{
+    thinker_t sentinel;
+public:
+    static thinker_list instance;
+
+    class iterator
+    {
+        thinker_t* current;
+
+    public:
+        using value_type = thinker_t*;
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = ptrdiff_t;
+        using reference = thinker_t*;
+
+        constexpr iterator(thinker_t* val)
+                : current(val)
+        {}
+
+        constexpr iterator& operator++()
+        {
+            current = current->next;
+            return *this;
+        }
+
+        constexpr thinker_t* operator*()
+        {
+            return current;
+        }
+
+        constexpr bool operator ==(iterator const& other) const
+        {
+            return current == other.current;
+        }
+
+        constexpr bool operator!=(iterator const& other) const
+        {
+            return !operator==(other);
+        }
+    };
+
+    constexpr thinker_list() noexcept
+        : sentinel{}
+    {
+        init();
+    }
+
+    [[nodiscard]] constexpr iterator begin() noexcept
+    {
+        return {sentinel.next};
+    }
+
+    [[nodiscard]] constexpr iterator end() noexcept
+    {
+        return {&sentinel};
+    }
+
+    constexpr void push_back(mobj_thinker* thinker)
+    {
+        sentinel.prev->next = &thinker->thinker;
+        thinker->thinker.next = &sentinel;
+        thinker->thinker.prev = sentinel.prev;
+        sentinel.prev = &thinker->thinker;
+    }
+
+    constexpr void init()
+    {
+        sentinel.prev = sentinel.next  = &sentinel;
+    }
+
+    void run();
+
+    uint32_t index_of(thinker_t* thinker);
+    constexpr thinker_t* at(uintptr_t index);
+
+private:
+    void remove(thinker_t* thinker)
+    {
+        thinker->next->prev = thinker->prev;
+        thinker->prev->next = thinker->next;
+    }
+};
+
+inline thinker_list thinker_list::instance{};
+
+namespace std
+{
+    template<>
+    struct iterator_traits<thinker_list::iterator>
+    {
+        using value_type = thinker_list::iterator::value_type;
+        using reference = thinker_list::iterator::reference ;
+        using difference_type = thinker_list::iterator::difference_type;
+        using iterator_category = thinker_list::iterator::iterator_category;
+    };
+}

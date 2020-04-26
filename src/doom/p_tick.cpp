@@ -36,48 +36,6 @@ int	leveltime;
 //
 
 
-
-// Both the head and tail of the thinker list.
-thinker_t	thinkercap;
-
-
-//
-// P_InitThinkers
-//
-void P_InitThinkers (void)
-{
-    thinkercap.prev = thinkercap.next  = &thinkercap;
-}
-
-
-
-
-//
-// P_AddThinker
-// Adds a new thinker at the end of the list.
-//
-void P_AddThinker (thinker_t* thinker)
-{
-    thinkercap.prev->next = thinker;
-    thinker->next = &thinkercap;
-    thinker->prev = thinkercap.prev;
-    thinkercap.prev = thinker;
-}
-
-
-
-//
-// P_RemoveThinker
-// Deallocation is lazy -- it will not actually be freed
-// until its thinking turn comes up.
-//
-/*void P_RemoveThinker (thinker_t* thinker)
-{
-  thinker->function.remove();
-}*/
-
-
-
 //
 // P_AllocateThinker
 // Allocates memory and adds a new thinker at the end of the list.
@@ -93,32 +51,25 @@ void P_AllocateThinker (thinker_t*	thinker)
 //
 void P_RunThinkers (void)
 {
-    thinker_t *currentthinker, *nextthinker;
-
-    currentthinker = thinkercap.next;
-    while (currentthinker != &thinkercap)
-    {
-	if ( currentthinker->function.is_removed())
-	{
-	    // time to remove it
-            nextthinker = currentthinker->next;
-	    currentthinker->next->prev = currentthinker->prev;
-	    currentthinker->prev->next = currentthinker->next;
-	    Z_Free(currentthinker);
-	}
-	else
-	{
-	    currentthinker->function.call_if(reinterpret_cast<mobj_thinker *>(currentthinker));
-            nextthinker = currentthinker->next;
-	}
-	currentthinker = nextthinker;
-    }
+    thinker_list::instance.run();
 
     // [crispy] support MUSINFO lump (dynamic music changing)
     T_MusInfo();
 }
 
-
+void thinker_list::run()
+{
+    for(auto* currentthinker : *this)
+    {
+        if (currentthinker->needs_removal())
+        {
+            remove(currentthinker);
+            Z_Free(currentthinker);
+        }
+        else
+            currentthinker->function.call_if(currentthinker);
+    }
+}
 
 //
 // P_Ticker

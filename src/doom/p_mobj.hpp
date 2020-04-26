@@ -202,13 +202,6 @@ enum mobjflag_t
 
 };
 
-struct mobj_thinker
-{
-    // List: thinker links.
-    thinker_t		thinker;
-
-    //virtual void think() {};
-};
 // Map Object definition.
 struct mobj_t : mobj_thinker
 {

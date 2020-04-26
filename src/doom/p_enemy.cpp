@@ -20,6 +20,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <algorithm>
 
 #include "m_random.hpp"
 #include "i_system.hpp"
@@ -576,20 +577,18 @@ P_LookForPlayers
 //
 void A_KeenDie (mobj_t* mo)
 {
-    thinker_t*	th;
-    mobj_t*	mo2;
     line_t	junk;
 
     A_Fall (mo);
     
     // scan the remaining thinkers
     // to see if all Keens are dead
-    for (th = thinkercap.next ; th != &thinkercap ; th=th->next)
+    for (auto* th : thinker_list::instance)
     {
-        if (!th->function.contains(P_MobjThinker))
+        auto* const mo2 = thinker_cast<mobj_t>(th);
+        if (!mo2)
             continue;
 
-        mo2 = (mobj_t *)th;
         if (mo2 != mo
             && mo2->type == mo->type
             && mo2->health > 0)
@@ -1518,20 +1517,14 @@ A_PainShootSkull
     mobj_t*	newmobj;
     angle_t	an;
     int		prestep;
-    int		count;
-    thinker_t*	currentthinker;
 
     // count total number of skull currently on the level
-    count = 0;
-
-    currentthinker = thinkercap.next;
-    while (currentthinker != &thinkercap)
+    int count = std::count_if(thinker_list::instance.begin(), thinker_list::instance.end(),
+            [](thinker_t* currentthinker)
     {
-	if (   (currentthinker->function == P_MobjThinker)
-	    && ((mobj_t *)currentthinker)->type == MT_SKULL)
-	    count++;
-	currentthinker = currentthinker->next;
-    }
+        auto* mo = thinker_cast<mobj_t>(currentthinker);
+        return mo && mo->type == MT_SKULL;
+    });
 
     // if there are allready 20 skulls on the level,
     // don't spit another one
@@ -1728,8 +1721,6 @@ static boolean CheckBossEnd(mobjtype_t motype)
 //
 void A_BossDeath (mobj_t* mo)
 {
-    thinker_t*	th;
-    mobj_t*	mo2;
     line_t	junk;
     int		i;
 		
@@ -1762,12 +1753,12 @@ void A_BossDeath (mobj_t* mo)
     
     // scan the remaining thinkers to see
     // if all bosses are dead
-    for (th = thinkercap.next ; th != &thinkercap ; th=th->next)
+    for (auto* th : thinker_list::instance)
     {
-	if (!th->function.contains(P_MobjThinker))
+        auto*const mo2 = thinker_cast<mobj_t>(th);
+	if (!mo2)
 	    continue;
-	
-	mo2 = (mobj_t *)th;
+
 	if (mo2 != mo
 	    && mo2->type == mo->type
 	    && mo2->health > 0)
@@ -1895,22 +1886,16 @@ static int	maxbraintargets; // [crispy] remove braintargets limit
 
 void A_BrainAwake (mobj_t* mo)
 {
-    thinker_t*	thinker;
-    mobj_t*	m;
-	
     // find all the target spots
     numbraintargets = 0;
     braintargeton = 0;
 	
-    thinker = thinkercap.next;
-    for (thinker = thinkercap.next ;
-	 thinker != &thinkercap ;
-	 thinker = thinker->next)
-    {
-	if (!thinker->function.contains(P_MobjThinker))
-	    continue;	// not a mobj
 
-	m = (mobj_t *)thinker;
+    for (thinker_t* thinker : thinker_list::instance)
+    {
+        auto*const m = thinker_cast<mobj_t>(thinker);
+	if (!m)
+	    continue;	// not a mobj
 
 	if (m->type == MT_BOSSTARGET )
 	{

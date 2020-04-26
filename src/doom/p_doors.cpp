@@ -126,7 +126,7 @@ void vldoor_t::think()*/
 	      case vld_blazeRaise:
 	      case vld_blazeClose:
 		door->sector->specialdata = NULL;
-		door->thinker.remove();
+                door->thinker.mark_for_removal();
 		// [crispy] fix "fast doors make two closing sounds"
 		if (!crispy->soundfix)
 		S_StartSound(&door->sector->soundorg, sfx_bdcls);
@@ -135,7 +135,7 @@ void vldoor_t::think()*/
 	      case vld_normal:
 	      case vld_close:
 		door->sector->specialdata = NULL;
-		door->thinker.remove();  // unlink and free
+                door->thinker.mark_for_removal();  // unlink and free
 		break;
 		
 	      case vld_close30ThenOpen:
@@ -193,7 +193,7 @@ void vldoor_t::think()*/
 	      case vld_blazeOpen:
 	      case vld_open:
 		door->sector->specialdata = NULL;
-		door->thinker.remove();  // unlink and free
+                door->thinker.mark_for_removal();  // unlink and free
 		break;
 		
 	      default:
@@ -289,7 +289,7 @@ EV_DoDoor
 	// new door thinker
 	rtn = 1;
 	door = zmalloc<decltype(door)> (sizeof(*door), PU_LEVSPEC, 0);
-	P_AddThinker (&door->thinker);
+	thinker_list::instance.push_back(door);
 	sec->specialdata = door;
 
 	door->thinker.function =  T_VerticalDoor;
@@ -468,6 +468,7 @@ EV_VerticalDoor
                 }
                 else if (door->thinker.function ==  T_PlatRaise)
                 {
+                    throw int(0xd34db33f);
                     // Erm, this is a plat, not a door.
                     // This notably causes a problem in ep1-0500.lmp where
                     // a plat and a door are cross-referenced; the door
@@ -518,7 +519,7 @@ EV_VerticalDoor
     
     // new door thinker
     door = zmalloc<decltype(door)> (sizeof(*door), PU_LEVSPEC, 0);
-    P_AddThinker (&door->thinker);
+    thinker_list::instance.push_back(door);
     sec->specialdata = door;
     door->thinker.function =  T_VerticalDoor;
     door->sector = sec;
@@ -569,7 +570,7 @@ void P_SpawnDoorCloseIn30 (sector_t* sec)
 	
     door = zmalloc<decltype(door)> ( sizeof(*door), PU_LEVSPEC, 0);
 
-    P_AddThinker (&door->thinker);
+    thinker_list::instance.push_back(door);
 
     sec->specialdata = door;
     sec->special = 0;
@@ -594,7 +595,7 @@ P_SpawnDoorRaiseIn5Mins
 	
     door = zmalloc<decltype(door)> ( sizeof(*door), PU_LEVSPEC, 0);
     
-    P_AddThinker (&door->thinker);
+    thinker_list::instance.push_back(door);
 
     sec->specialdata = door;
     sec->special = 0;
@@ -804,7 +805,7 @@ EV_SlidingDoor
     if (!door)
     {
 	door = zmalloc<decltype(door)> (sizeof(*door), PU_LEVSPEC, 0);
-	P_AddThinker (&door->thinker);
+	thinker_list::instance.push_back (&door->thinker);
 	sec->specialdata = door;
 		
 	door->type = sdt_openAndClose;

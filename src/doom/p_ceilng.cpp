@@ -194,7 +194,7 @@ EV_DoCeiling
 	// new door thinker
 	rtn = 1;
 	ceiling = zmalloc<decltype(ceiling)> (sizeof(*ceiling), PU_LEVSPEC, 0);
-	P_AddThinker (&ceiling->thinker);
+	thinker_list::instance.push_back(ceiling);
 	sec->specialdata = ceiling;
 	ceiling->thinker.function = T_MoveCeiling;
 	ceiling->sector = sec;
@@ -269,7 +269,7 @@ void P_RemoveActiveCeiling(ceiling_t* c)
 	if (activeceilings[i] == c)
 	{
 	    activeceilings[i]->sector->specialdata = NULL;
-	    activeceilings[i]->thinker.remove();
+        activeceilings[i]->thinker.mark_for_removal();
 	    activeceilings[i] = NULL;
 	    break;
 	}

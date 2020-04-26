@@ -46,10 +46,8 @@ EV_Teleport
 {
     int		i;
     int		tag;
-    mobj_t*	m;
     mobj_t*	fog;
     unsigned	an;
-    thinker_t*	thinker;
     sector_t*	sector;
     fixed_t	oldx;
     fixed_t	oldy;
@@ -70,30 +68,26 @@ EV_Teleport
     {
 	if (sectors[ i ].tag == tag )
 	{
-	    thinker = thinkercap.next;
-	    for (thinker = thinkercap.next;
-		 thinker != &thinkercap;
-		 thinker = thinker->next)
+	    for (auto* thinker : thinker_list::instance)
 	    {
 		// not a mobj
-		if (thinker->function != P_MobjThinker)
-		    continue;	
+		auto *const m = thinker_cast<mobj_t>(thinker);
+		if (!m)
+		    continue;
 
-		m = (mobj_t *)thinker;
-		
 		// not a teleportman
 		if (m->type != MT_TELEPORTMAN )
-		    continue;		
+		    continue;
 
 		sector = m->subsector->sector;
 		// wrong sector
 		if (sector-sectors != i )
-		    continue;	
+		    continue;
 
 		oldx = thing->x;
 		oldy = thing->y;
 		oldz = thing->z;
-				
+
 		if (!P_TeleportMove (thing, m->x, m->y))
 		    return 0;
 
@@ -121,15 +115,15 @@ EV_Teleport
 
 		// emit sound, where?
 		S_StartSound (fog, sfx_telept);
-		
+
 		// don't move for a bit
 		if (thing->player)
-		    thing->reactiontime = 18;	
+		    thing->reactiontime = 18;
 
 		thing->angle = m->angle;
 		thing->momx = thing->momy = thing->momz = 0;
 		return 1;
-	    }	
+	    }
 	}
     }
     return 0;

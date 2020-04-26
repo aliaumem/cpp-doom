@@ -122,9 +122,7 @@ extern void T_FireFlicker (fireflicker_t* flick);
 
 static void P_WriteFireFlicker (const char *key)
 {
-	thinker_t* th;
-
-	for (th = thinkercap.next; th != &thinkercap; th = th->next)
+	for (auto* th : thinker_list::instance)
 	{
 		if (th->function == T_FireFlicker)
 		{
@@ -164,7 +162,7 @@ static void P_ReadFireFlicker (const char *key)
 
 		flick->thinker.function = T_FireFlicker;
 
-		P_AddThinker(&flick->thinker);
+		thinker_list::instance.push_back(flick);
 	}
 }
 
@@ -182,7 +180,7 @@ static void P_WriteSoundTarget (const char *key)
 			M_snprintf(line, MAX_LINE_LEN, "%s %d %d\n",
 			           key,
 			           i,
-			           P_ThinkerToIndex((thinker_t *) sector->soundtarget));
+                       thinker_list::instance.index_of(&sector->soundtarget->thinker));
 			fputs(line, save_stream);
 		}
 	}
@@ -283,14 +281,10 @@ extern int numbraintargets, braintargeton;
 
 static void P_WriteBrainTarget (const char *key)
 {
-	thinker_t *th;
-
-	for (th = thinkercap.next; th != &thinkercap; th = th->next)
+	for (auto* th : thinker_list::instance)
 	{
-		if (th->function == P_MobjThinker)
+		if (auto*const mo = thinker_cast<mobj_t>(th); mo)
 		{
-			mobj_t *mo = (mobj_t *)th;
-
 			if (mo->state == &states[S_BRAINEYE1])
 			{
 				M_snprintf(line, MAX_LINE_LEN, "%s %d %d\n",

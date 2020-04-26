@@ -685,7 +685,7 @@ P_SpawnMobjSafe
 
     mobj->thinker.function = P_MobjThinker;
 	
-    P_AddThinker (&mobj->thinker);
+    thinker_list::instance.push_back(mobj);
 
     return mobj;
 }
@@ -740,7 +740,7 @@ void P_RemoveMobj (mobj_t* mobj)
     }
     
     // free block
-    mobj->thinker.remove();
+    mobj->thinker.mark_for_removal();
 }
 
 
