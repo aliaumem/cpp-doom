@@ -124,10 +124,8 @@ static void P_WriteFireFlicker (const char *key)
 {
 	for (auto* th : thinker_list::instance)
 	{
-		if (th->function == T_FireFlicker)
+		if (auto* flick = thinker_cast<fireflicker_t>(th); flick)
 		{
-			fireflicker_t *flick = (fireflicker_t *)th;
-
 			M_snprintf(line, MAX_LINE_LEN, "%s %d %d %d %d\n",
 			           key,
 			           (int)(flick->sector - sectors),
@@ -160,7 +158,7 @@ static void P_ReadFireFlicker (const char *key)
 		flick->maxlight = maxlight;
 		flick->minlight = minlight;
 
-		flick->thinker.function = T_FireFlicker;
+		flick->thinker = T_FireFlicker;
 
 		thinker_list::instance.push_back(flick);
 	}

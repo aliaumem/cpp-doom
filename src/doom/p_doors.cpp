@@ -292,7 +292,7 @@ EV_DoDoor
 	thinker_list::instance.push_back(door);
 	sec->specialdata = door;
 
-	door->thinker.function =  T_VerticalDoor;
+	door->thinker =  T_VerticalDoor;
 	door->sector = sec;
 	door->type = type;
 	door->topwait = VDOORWAIT;
@@ -447,7 +447,7 @@ EV_VerticalDoor
 	    {
 		door->direction = 1;	// go back up
 		// [crispy] play sound effect when the door is opened again while going down
-		if (crispy->soundfix && door->thinker.function ==  T_VerticalDoor)
+		if (crispy->soundfix && thinker_cast<vldoor_t>(door->thinker))
 		S_StartSound(&door->sector->soundorg, line->special == 117 ? sfx_bdopn : sfx_doropn);
 	    }
 	    else
@@ -459,14 +459,14 @@ EV_VerticalDoor
                 // In Vanilla, door->direction is set, even though
                 // "specialdata" might not actually point at a door.
 
-                if (door->thinker.function ==  T_VerticalDoor)
+                if (thinker_cast<vldoor_t>(door->thinker))
                 {
                     door->direction = -1;	// start going down immediately
                     // [crispy] play sound effect when the door is closed manually
                     if (crispy->soundfix)
                     S_StartSound(&door->sector->soundorg, line->special == 117 ? sfx_bdcls : sfx_dorcls);
                 }
-                else if (door->thinker.function ==  T_PlatRaise)
+                else if (auto* plat = thinker_cast<plat_t>(door->thinker); plat)
                 {
                     throw int(0xd34db33f);
                     // Erm, this is a plat, not a door.
@@ -476,9 +476,6 @@ EV_VerticalDoor
                     // The direction field in vldoor_t corresponds to the wait
                     // field in plat_t.  Let's set that to -1 instead.
 
-                    plat_t *plat;
-
-                    plat = (plat_t *) door;
                     plat->wait = -1;
                 }
                 else
@@ -521,7 +518,7 @@ EV_VerticalDoor
     door = zmalloc<decltype(door)> (sizeof(*door), PU_LEVSPEC, 0);
     thinker_list::instance.push_back(door);
     sec->specialdata = door;
-    door->thinker.function =  T_VerticalDoor;
+    door->thinker =  T_VerticalDoor;
     door->sector = sec;
     door->direction = 1;
     door->speed = VDOORSPEED;
@@ -566,16 +563,14 @@ EV_VerticalDoor
 //
 void P_SpawnDoorCloseIn30 (sector_t* sec)
 {
-    vldoor_t*	door;
-	
-    door = zmalloc<decltype(door)> ( sizeof(*door), PU_LEVSPEC, 0);
+    auto* door = zmalloc_one<vldoor_t> (PU_LEVSPEC);
 
     thinker_list::instance.push_back(door);
 
     sec->specialdata = door;
     sec->special = 0;
 
-    door->thinker.function = T_VerticalDoor;
+    door->thinker = T_VerticalDoor;
     door->sector = sec;
     door->direction = 0;
     door->type = vld_normal;
@@ -591,16 +586,14 @@ P_SpawnDoorRaiseIn5Mins
 ( sector_t*	sec,
   int		secnum )
 {
-    vldoor_t*	door;
-	
-    door = zmalloc<decltype(door)> ( sizeof(*door), PU_LEVSPEC, 0);
+    auto* door = zmalloc_one<vldoor_t> (PU_LEVSPEC);
     
     thinker_list::instance.push_back(door);
 
     sec->specialdata = door;
     sec->special = 0;
 
-    door->thinker.function = T_VerticalDoor;
+    door->thinker = T_VerticalDoor;
     door->sector = sec;
     door->direction = 2;
     door->type = vld_raiseIn5Mins;

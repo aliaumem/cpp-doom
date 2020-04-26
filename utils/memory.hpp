@@ -24,5 +24,11 @@ auto zmalloc(int size, int tag, void *ptr)
   return static_cast<DataType>(Z_Malloc(size, tag, ptr));
 }
 
+template <typename DataType>
+auto zmalloc_one(int tag, void* ptr = nullptr)
+{
+    return static_cast<DataType*>(Z_Malloc(sizeof(DataType), tag, ptr));
+}
+
 
 #endif // CRISPY_DOOM_MEMORY_HPP

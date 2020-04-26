@@ -135,6 +135,13 @@ struct fireflicker_t : mobj_thinker
     
 };
 
+void T_FireFlicker(fireflicker_t*);
+
+template <>
+struct thinker_trait<fireflicker_t>
+{
+    constexpr const static auto func = T_FireFlicker;
+};
 
 
 struct lightflash_t : mobj_thinker
@@ -181,6 +188,7 @@ void    T_LightFlash (lightflash_t* flash);
 void    P_SpawnLightFlash (sector_t* sector);
 void    T_StrobeFlash (strobe_t* flash);
 
+
 void
 P_SpawnStrobeFlash
 ( sector_t*	sector,
@@ -198,7 +206,23 @@ EV_LightTurnOn
 void    T_Glow(glow_t* g);
 void    P_SpawnGlowingLight(sector_t* sector);
 
+template<>
+struct thinker_trait<lightflash_t>
+{
+    constexpr const static auto func = T_LightFlash;
+};
 
+template<>
+struct thinker_trait<strobe_t>
+{
+    constexpr const static auto func = T_StrobeFlash;
+};
+
+template<>
+struct thinker_trait<glow_t>
+{
+    constexpr const static auto func = T_Glow;
+};
 
 
 //
@@ -312,6 +336,12 @@ extern plat_t*	activeplats[MAXPLATS];
 
 void    T_PlatRaise(plat_t*	plat);
 
+template <>
+struct thinker_trait<plat_t>
+{
+    constexpr const static auto func = T_PlatRaise;
+};
+
 int
 EV_DoPlat
 ( line_t*	line,
@@ -361,7 +391,13 @@ struct vldoor_t : mobj_thinker
     //void think() override;
 };
 
+extern void T_VerticalDoor(vldoor_t*);
 
+template <>
+struct thinker_trait<vldoor_t>
+{
+    constexpr const static auto func = T_VerticalDoor;
+};
 
 #define VDOORSPEED		FRACUNIT*2
 #define VDOORWAIT		150
@@ -530,6 +566,11 @@ void    P_RemoveActiveCeiling(ceiling_t* c);
 int	EV_CeilingCrushStop(line_t* line);
 void    P_ActivateInStasisCeiling(line_t* line);
 
+template<>
+struct thinker_trait<ceiling_t>
+{
+    constexpr const static auto func = T_MoveCeiling;
+};
 
 //
 // P_FLOOR
@@ -627,6 +668,12 @@ EV_DoFloor
   floor_e	floortype );
 
 void T_MoveFloor( floormove_t* floor);
+
+template<>
+struct thinker_trait<floormove_t>
+{
+    constexpr const static auto func = T_MoveFloor;
+};
 
 //
 // P_TELEPT

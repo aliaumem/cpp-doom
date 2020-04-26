@@ -563,7 +563,7 @@ void P_MobjThinker (mobj_t* mobj)
     {
 	P_XYMovement (mobj);
 
-	if (mobj->thinker.function.is_removed())
+	if (mobj->thinker.needs_removal())
 	    return;		// mobj was removed
     }
     if ( (mobj->z != mobj->floorz)
@@ -571,7 +571,7 @@ void P_MobjThinker (mobj_t* mobj)
     {
 	P_ZMovement (mobj);
 
-	if (mobj->thinker.function.is_removed())
+	if (mobj->thinker.needs_removal())
 	    return;		// mobj was removed
     }
 
@@ -624,11 +624,10 @@ P_SpawnMobjSafe
   mobjtype_t	type,
   boolean safe )
 {
-    mobj_t*	mobj;
     state_t*	st;
     mobjinfo_t*	info;
 	
-    mobj = zmalloc<decltype(mobj)> (sizeof(*mobj), PU_LEVEL, NULL);
+    mobj_t* mobj = zmalloc_one<mobj_t> (PU_LEVEL);
     memset (mobj, 0, sizeof (*mobj));
     info = &mobjinfo[type];
 	
@@ -683,7 +682,7 @@ P_SpawnMobjSafe
     mobj->oldz = mobj->z;
     mobj->oldangle = mobj->angle;
 
-    mobj->thinker.function = P_MobjThinker;
+    mobj->thinker = P_MobjThinker;
 	
     thinker_list::instance.push_back(mobj);
 
