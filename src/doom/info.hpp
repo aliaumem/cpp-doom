@@ -24,7 +24,7 @@
 // Needed for action function pointer handling.
 #include "d_think.hpp"
 
-typedef enum
+enum spritenum_t
 {
     SPR_TROO,
     SPR_SHTG,
@@ -185,10 +185,9 @@ typedef enum
     SPR_SP80, SPR_SP81, SPR_SP82, SPR_SP83, SPR_SP84, SPR_SP85, SPR_SP86, SPR_SP87, SPR_SP88, SPR_SP89,
     SPR_SP90, SPR_SP91, SPR_SP92, SPR_SP93, SPR_SP94, SPR_SP95, SPR_SP96, SPR_SP97, SPR_SP98, SPR_SP99,
     NUMSPRITES
+};
 
-} spritenum_t;
-
-typedef enum
+enum statenum_t
 {
     S_NULL,
     S_LIGHTDONE,
@@ -1230,7 +1229,7 @@ typedef enum
     // [BH] extra dehacked states
     EXTRASTATES = 1089,
     NUMSTATES = 4000
-} statenum_t;
+};
 
 
 struct state_t
@@ -1248,7 +1247,7 @@ struct state_t
 extern state_t	states[NUMSTATES];
 extern const char *sprnames[];
 
-typedef enum {
+enum mobjtype_t{
     MT_PLAYER,
     MT_POSSESSED,
     MT_SHOTGUY,
@@ -1419,9 +1418,9 @@ typedef enum {
     MT_EXTRA95, MT_EXTRA96, MT_EXTRA97, MT_EXTRA98, MT_EXTRA99,
     NUMMOBJTYPES
 
-} mobjtype_t;
+};
 
-typedef struct
+struct mobjinfo_t
 {
     int	doomednum;
     int	spawnstate;
@@ -1449,7 +1448,7 @@ typedef struct
     // [crispy] height of the spawnstate's first sprite in pixels
     int	actualheight;
 
-} mobjinfo_t;
+};
 
 extern mobjinfo_t mobjinfo[NUMMOBJTYPES];
 

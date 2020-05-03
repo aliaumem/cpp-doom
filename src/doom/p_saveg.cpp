@@ -163,13 +163,12 @@ static void saveg_write_pad(void) {
 // Pointers
 
 static void *saveg_readp(void) {
-    saveg_read32();
-  return nullptr;//reinterpret_cast<void *>(static_cast<intptr_t>(saveg_read32()));
+  return reinterpret_cast<void *>(static_cast<intptr_t>(saveg_read32()));
 }
 
 static void saveg_writep(const void *p) {
-    assert(reinterpret_cast<uintptr_t >(p) <= std::numeric_limits<uint32_t>::max());
-    saveg_write32((intptr_t)p); }
+    saveg_write32((intptr_t)p);
+}
 
 // Enum values are 32-bit integers.
 
@@ -240,7 +239,6 @@ static void saveg_write_actionf_t(actionf_t *str) {
 //
 // thinker_t
 //
-
 static void saveg_read_thinker_t(thinker_t *str) {
   str->prev = reinterpret_cast<thinker_t *>(saveg_readp());
   str->next = reinterpret_cast<thinker_t *>(saveg_readp());
@@ -253,6 +251,17 @@ static void saveg_write_thinker_t(thinker_t *str) {
   saveg_write_think_t(&str->function);
 }
 
+static void saveg_read_mobj_thinker(mobj_thinker* thinker)
+{
+    saveg_read_thinker_t(&thinker->thinker);
+}
+
+static void saveg_write_mobj_thinker(mobj_thinker* thinker)
+{
+    saveg_write_thinker_t(&thinker->thinker);
+}
+
+
 //
 // mobj_t
 //
@@ -261,7 +270,7 @@ static void saveg_read_mobj_t(mobj_t *str) {
   int pl;
 
   // thinker_t thinker;
-  saveg_read_thinker_t(&str->thinker);
+  saveg_read_mobj_thinker(str);
 
   // fixed_t x;
   str->x = saveg_read32();
@@ -382,7 +391,7 @@ uint32_t P_ThinkerToIndex(thinker_t &thinker) {
   return thinker_list::instance.index_of(&thinker);
 }
 
-uint32_t thinker_list::index_of(thinker_t *thinker) {
+constexpr uint32_t thinker_list::index_of(thinker_t *thinker) {
   if (!thinker)
     return 0;
 
@@ -426,7 +435,7 @@ constexpr thinker_t *thinker_list::mobj_at(uintptr_t index) {
 
 static void saveg_write_mobj_t(mobj_t *str) {
   // thinker_t thinker;
-  saveg_write_thinker_t(&str->thinker);
+  saveg_write_mobj_thinker(str);
 
   // fixed_t x;
   saveg_write32(str->x);
@@ -894,11 +903,11 @@ static void saveg_write_player_t(player_t *str) {
 // ceiling_t
 //
 
-static void saveg_read_ceiling_t(ceiling_t *str) {
+static void saveg_read(ceiling_t *str) {
   int sector;
 
   // thinker_t thinker;
-  saveg_read_thinker_t(&str->thinker);
+  saveg_read_mobj_thinker(str);
 
   // ceiling_e type;
   str->type = static_cast<ceiling_e>(saveg_read_enum());
@@ -929,9 +938,9 @@ static void saveg_read_ceiling_t(ceiling_t *str) {
   str->olddirection = saveg_read32();
 }
 
-static void saveg_write_ceiling_t(ceiling_t *str) {
+static void saveg_write(ceiling_t *str) {
   // thinker_t thinker;
-  saveg_write_thinker_t(&str->thinker);
+  saveg_write_mobj_thinker(str);
 
   // ceiling_e type;
   saveg_write_enum(str->type);
@@ -965,11 +974,11 @@ static void saveg_write_ceiling_t(ceiling_t *str) {
 // vldoor_t
 //
 
-static void saveg_read_vldoor_t(vldoor_t *str) {
+static void saveg_read(vldoor_t *str) {
   int sector;
 
   // thinker_t thinker;
-  saveg_read_thinker_t(&str->thinker);
+  saveg_read_mobj_thinker(str);
 
   // vldoor_e type;
   str->type = static_cast<vldoor_e>(saveg_read_enum());
@@ -994,9 +1003,9 @@ static void saveg_read_vldoor_t(vldoor_t *str) {
   str->topcountdown = saveg_read32();
 }
 
-static void saveg_write_vldoor_t(vldoor_t *str) {
+static void saveg_write(vldoor_t *str) {
   // thinker_t thinker;
-  saveg_write_thinker_t(&str->thinker);
+  saveg_write_mobj_thinker(str);
 
   // vldoor_e type;
   saveg_write_enum(str->type);
@@ -1024,11 +1033,11 @@ static void saveg_write_vldoor_t(vldoor_t *str) {
 // floormove_t
 //
 
-static void saveg_read_floormove_t(floormove_t *str) {
+static void saveg_read(floormove_t *str) {
   int sector;
 
   // thinker_t thinker;
-  saveg_read_thinker_t(&str->thinker);
+  saveg_read_mobj_thinker(str);
 
   // floor_e type;
   str->type = static_cast<floor_e>(saveg_read_enum());
@@ -1056,9 +1065,9 @@ static void saveg_read_floormove_t(floormove_t *str) {
   str->speed = saveg_read32();
 }
 
-static void saveg_write_floormove_t(floormove_t *str) {
+static void saveg_write(floormove_t *str) {
   // thinker_t thinker;
-  saveg_write_thinker_t(&str->thinker);
+  saveg_write_mobj_thinker(str);
 
   // floor_e type;
   saveg_write_enum(str->type);
@@ -1089,11 +1098,11 @@ static void saveg_write_floormove_t(floormove_t *str) {
 // plat_t
 //
 
-static void saveg_read_plat_t(plat_t *str) {
+static void saveg_read(plat_t *str) {
   int sector;
 
   // thinker_t thinker;
-  saveg_read_thinker_t(&str->thinker);
+  saveg_read_mobj_thinker(str);
 
   // sector_t* sector;
   sector = saveg_read32();
@@ -1130,9 +1139,9 @@ static void saveg_read_plat_t(plat_t *str) {
   str->type = static_cast<plattype_e>(saveg_read_enum());
 }
 
-static void saveg_write_plat_t(plat_t *str) {
+static void saveg_write(plat_t *str) {
   // thinker_t thinker;
-  saveg_write_thinker_t(&str->thinker);
+  saveg_write_mobj_thinker(str);
 
   // sector_t* sector;
   saveg_write32(str->sector - sectors);
@@ -1172,11 +1181,11 @@ static void saveg_write_plat_t(plat_t *str) {
 // lightflash_t
 //
 
-static void saveg_read_lightflash_t(lightflash_t *str) {
+static void saveg_read(lightflash_t *str) {
   int sector;
 
   // thinker_t thinker;
-  saveg_read_thinker_t(&str->thinker);
+  saveg_read_mobj_thinker(str);
 
   // sector_t* sector;
   sector = saveg_read32();
@@ -1198,9 +1207,9 @@ static void saveg_read_lightflash_t(lightflash_t *str) {
   str->mintime = saveg_read32();
 }
 
-static void saveg_write_lightflash_t(lightflash_t *str) {
+static void saveg_write(lightflash_t *str) {
   // thinker_t thinker;
-  saveg_write_thinker_t(&str->thinker);
+  saveg_write_mobj_thinker(str);
 
   // sector_t* sector;
   saveg_write32(str->sector - sectors);
@@ -1225,11 +1234,11 @@ static void saveg_write_lightflash_t(lightflash_t *str) {
 // strobe_t
 //
 
-static void saveg_read_strobe_t(strobe_t *str) {
+static void saveg_read(strobe_t *str) {
   int sector;
 
   // thinker_t thinker;
-  saveg_read_thinker_t(&str->thinker);
+  saveg_read_mobj_thinker(str);
 
   // sector_t* sector;
   sector = saveg_read32();
@@ -1251,9 +1260,9 @@ static void saveg_read_strobe_t(strobe_t *str) {
   str->brighttime = saveg_read32();
 }
 
-static void saveg_write_strobe_t(strobe_t *str) {
+static void saveg_write(strobe_t *str) {
   // thinker_t thinker;
-  saveg_write_thinker_t(&str->thinker);
+  saveg_write_mobj_thinker(str);
 
   // sector_t* sector;
   saveg_write32(str->sector - sectors);
@@ -1278,11 +1287,11 @@ static void saveg_write_strobe_t(strobe_t *str) {
 // glow_t
 //
 
-static void saveg_read_glow_t(glow_t *str) {
+static void saveg_read(glow_t *str) {
   int sector;
 
   // thinker_t thinker;
-  saveg_read_thinker_t(&str->thinker);
+  saveg_read_mobj_thinker(str);
 
   // sector_t* sector;
   sector = saveg_read32();
@@ -1298,9 +1307,9 @@ static void saveg_read_glow_t(glow_t *str) {
   str->direction = saveg_read32();
 }
 
-static void saveg_write_glow_t(glow_t *str) {
+static void saveg_write(glow_t *str) {
   // thinker_t thinker;
-  saveg_write_thinker_t(&str->thinker);
+  saveg_write_mobj_thinker(str);
 
   // sector_t* sector;
   saveg_write32(str->sector - sectors);
@@ -1313,6 +1322,41 @@ static void saveg_write_glow_t(glow_t *str) {
 
   // int direction;
   saveg_write32(str->direction);
+}
+
+
+template <typename T>
+static void saveg_read_special()
+{
+    saveg_read_pad();
+    auto *special = znew<T>();
+    saveg_read(special);
+    special->sector->specialdata = special;
+    thinker_list::instance.push_back(special);
+}
+
+template <typename T>
+static void saveg_read_light()
+{
+    saveg_read_pad();
+    auto *special = znew<T>();
+    saveg_read(special);
+    thinker_list::instance.push_back(special);
+}
+
+template <typename T>
+static T* saveg_read_special_movable()
+{
+    saveg_read_pad();
+    auto *special = znew<T>();
+    saveg_read(special);
+    special->sector->specialdata = special;
+
+    if (!special->has_any_action())
+        special->stop_moving();
+
+    thinker_list::instance.push_back(special);
+    return special;
 }
 
 //
@@ -1586,8 +1630,9 @@ void P_UnArchiveThinkers(void) {
 
     case tc_mobj: {
       saveg_read_pad();
-      auto* mobj = zmalloc_one<mobj_t>(PU_LEVEL);
+      auto* mobj = zmalloc_one<mobj_t>(PU_LEVSPEC);
       saveg_read_mobj_t(mobj);
+      new (mobj) mobj_t();
 
       // [crispy] restore mobj->target and mobj->tracer fields
       // mobj->target = NULL;
@@ -1598,7 +1643,7 @@ void P_UnArchiveThinkers(void) {
       // savegame loaded
       //	    mobj->floorz = mobj->subsector->sector->floorheight;
       //	    mobj->ceilingz = mobj->subsector->sector->ceilingheight;
-      mobj->thinker = P_MobjThinker;
+
       thinker_list::instance.push_back(mobj);
       break;
     }
@@ -1643,6 +1688,22 @@ enum specials_e {
   tc_endspecials
 };
 
+specials_e specialstype(ceiling_t*) { return tc_ceiling; }
+specials_e specialstype(vldoor_t*) { return tc_door; }
+specials_e specialstype(floormove_t*) { return tc_floor; }
+specials_e specialstype(plat_t*) { return tc_plat; }
+specials_e specialstype(lightflash_t*) { return tc_flash; }
+specials_e specialstype(strobe_t*) { return tc_strobe; }
+specials_e specialstype(glow_t*) { return tc_glow; }
+
+template <typename T>
+void saveg_write_special(T* special)
+{
+    saveg_write8(specialstype(special));
+    saveg_write_pad();
+    saveg_write(special);
+}
+
 //
 // Things to handle:
 //
@@ -1655,80 +1716,29 @@ enum specials_e {
 // T_PlatRaise, (plat_t: sector_t *), - active list
 //
 void P_ArchiveSpecials(void) {
-  int i;
-
   // save off the current thinkers
   for (auto *th : thinker_list::instance) {
-    if (th->has_any()) {
-      for (i = 0; i < MAXCEILINGS; i++)
-        if (activeceilings[i] == (ceiling_t *)th)
-          break;
+    if (!th->has_any()) {
+        auto ceilIt = std::find(activeceilings.begin(), activeceilings.end(), reinterpret_cast<ceiling_t*>(th));
+        if (ceilIt != activeceilings.end()) saveg_write_special(*ceilIt);
 
-      if (i < MAXCEILINGS) {
-        saveg_write8(tc_ceiling);
-        saveg_write_pad();
-        saveg_write_ceiling_t((ceiling_t *)th);
-      }
       // [crispy] save plats in statis
-      for (i = 0; i < MAXPLATS; i++)
-        if (activeplats[i] == (plat_t *)th)
-          break;
-
-      if (i < MAXPLATS) {
-        saveg_write8(tc_plat);
-        saveg_write_pad();
-        saveg_write_plat_t((plat_t *)th);
-      }
-      continue;
-    }
-
-    if (auto *ceiling = thinker_cast<ceiling_t>(th); ceiling) {
-      saveg_write8(tc_ceiling);
-      saveg_write_pad();
-      saveg_write_ceiling_t(ceiling);
-      continue;
-    }
-
-    if (auto *door = thinker_cast<vldoor_t>(th); door) {
-      saveg_write8(tc_door);
-      saveg_write_pad();
-      saveg_write_vldoor_t(door);
-      continue;
-    }
-
-    if (auto *floor = thinker_cast<floormove_t>(th); floor) {
-      saveg_write8(tc_floor);
-      saveg_write_pad();
-      saveg_write_floormove_t(floor);
-      continue;
-    }
-
-    if (auto *plat = thinker_cast<plat_t>(th); plat) {
-      saveg_write8(tc_plat);
-      saveg_write_pad();
-      saveg_write_plat_t(plat);
-      continue;
-    }
-
-    if (auto *flash = thinker_cast<lightflash_t>(th); flash) {
-      saveg_write8(tc_flash);
-      saveg_write_pad();
-      saveg_write_lightflash_t(flash);
-      continue;
-    }
-
-    if (auto *strobe = thinker_cast<strobe_t>(th); strobe) {
-      saveg_write8(tc_strobe);
-      saveg_write_pad();
-      saveg_write_strobe_t(strobe);
-      continue;
-    }
-
-    if (auto *glow = thinker_cast<glow_t>(th); glow) {
-      saveg_write8(tc_glow);
-      saveg_write_pad();
-      saveg_write_glow_t(glow);
-      continue;
+      auto platIt = std::find(std::begin(activeplats), std::end(activeplats), reinterpret_cast<plat_t*>(th));
+        if(platIt != std::end(activeplats)) saveg_write_special(reinterpret_cast<plat_t*>(th));
+    } else if (auto *ceiling = thinker_cast<ceiling_t>(th); ceiling) {
+      saveg_write_special(ceiling);
+    } else if (auto *door = thinker_cast<vldoor_t>(th); door) {
+      saveg_write_special(door);
+    } else if (auto *floor = thinker_cast<floormove_t>(th); floor) {
+        saveg_write_special(floor);
+    } else if (auto *plat = thinker_cast<plat_t>(th); plat) {
+        saveg_write_special(plat);
+    } else if (auto *flash = thinker_cast<lightflash_t>(th); flash) {
+        saveg_write_special(flash);
+    } else if (auto *strobe = thinker_cast<strobe_t>(th); strobe) {
+        saveg_write_special(strobe);
+    } else if (auto *glow = thinker_cast<glow_t>(th); glow) {
+        saveg_write_special(glow);
     }
   }
 
@@ -1751,77 +1761,39 @@ void P_UnArchiveSpecials(void) {
       return; // end of list
 
     case tc_ceiling: {
-      saveg_read_pad();
-      auto *ceiling = zmalloc_one<ceiling_t>(PU_LEVEL);
-      saveg_read_ceiling_t(ceiling);
-      ceiling->sector->specialdata = ceiling;
-
-      if (ceiling->thinker.has_any())
-        ceiling->thinker = T_MoveCeiling;
-
-      thinker_list::instance.push_back(ceiling);
+      auto *ceiling = saveg_read_special_movable<ceiling_t>();
       P_AddActiveCeiling(ceiling);
       break;
     }
 
     case tc_door: {
-      saveg_read_pad();
-      auto *door = zmalloc_one<vldoor_t>(PU_LEVEL);
-      saveg_read_vldoor_t(door);
-      door->sector->specialdata = door;
-      door->thinker = T_VerticalDoor;
-      thinker_list::instance.push_back(door);
+      saveg_read_special<vldoor_t>();
       break;
     }
 
     case tc_floor: {
-      saveg_read_pad();
-      auto *floor = zmalloc_one<floormove_t>(PU_LEVEL);
-      saveg_read_floormove_t(floor);
-      floor->sector->specialdata = floor;
-      floor->thinker = T_MoveFloor;
-      thinker_list::instance.push_back(floor);
+      saveg_read_special<floormove_t>();
       break;
     }
 
     case tc_plat: {
-      saveg_read_pad();
-      auto *plat = zmalloc_one<plat_t>(PU_LEVEL);
-      saveg_read_plat_t(plat);
-      plat->sector->specialdata = plat;
-
-      if (plat->thinker.function)
-        plat->thinker = T_PlatRaise;
-
-      thinker_list::instance.push_back(plat);
+      auto* plat = saveg_read_special_movable<plat_t>();
       P_AddActivePlat(plat);
       break;
     }
 
     case tc_flash: {
-      saveg_read_pad();
-      auto *flash = zmalloc_one<lightflash_t>(PU_LEVEL);
-      saveg_read_lightflash_t(flash);
-      flash->thinker = T_LightFlash;
-      thinker_list::instance.push_back(flash);
+      saveg_read_light<lightflash_t>();
       break;
     }
 
     case tc_strobe: {
-      saveg_read_pad();
-      auto *strobe = zmalloc_one<strobe_t>(PU_LEVEL);
-      saveg_read_strobe_t(strobe);
-      strobe->thinker = T_StrobeFlash;
-      thinker_list::instance.push_back(strobe);
+      saveg_read_light<strobe_t>();
       break;
     }
 
     case tc_glow: {
-      saveg_read_pad();
-      auto *glow = zmalloc_one<glow_t>(PU_LEVEL);
-      saveg_read_glow_t(glow);
-      glow->thinker = T_Glow;
-      thinker_list::instance.push_back(glow);
+      saveg_read_light<glow_t>();
       break;
     }
 

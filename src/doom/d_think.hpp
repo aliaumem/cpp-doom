@@ -46,7 +46,6 @@ struct thinker_t;
 
 struct action_removed {};
 
-typedef void (*actionf_v)();
 typedef void (*actionf_p1)(mobj_t *mo);
 typedef void (*actionf_pthink1)(mobj_thinker *mo);
 typedef void (*actionf_vldoor)(vldoor_t *mo);
@@ -74,17 +73,10 @@ struct actionf_t {
              std::get<fptr>(action) == f;
     }
 
-    struct visitor {
-      mobj_thinker *obj;
-
-      template <typename T> void operator()(void (*f)(T)) const {
-        f(reinterpret_cast<T>(obj));
-      }
-    };
-
     void invoke(mobj_thinker *t) {
-      visitor v{t};
-      std::visit(v, action);
+      std::visit(
+          [&t]<typename Arg>(void (*f)(Arg)) { f(reinterpret_cast<Arg>(t)); },
+          action);
     }
 
     void *as_ptr() const {
@@ -92,14 +84,10 @@ struct actionf_t {
                         action);
     }
   };
-  std::variant<std::monostate, actionf_v, action_removed, actionf_p3, action1>
-      value;
+  std::variant<std::monostate, action_removed, actionf_p3, action1> value;
 
 public:
-  auto &acv() { return std::get<actionf_v>(value); }
-  auto acv() const { return std::get<actionf_v>(value); }
-
-  void *as_ptr() { return std::get<action1>(value).as_ptr(); }
+  void *as_ptr() const { return std::get<action1>(value).as_ptr(); }
   actionf_t &operator=(void *f) {
     value = action1{reinterpret_cast<actionf_p1>(f)};
     return *this;
@@ -111,19 +99,12 @@ public:
   constexpr actionf_t(void (*f)(Arg)) : value{action1{f}} {}
   constexpr actionf_t(actionf_p3 f) : value{f} {}
 
-  constexpr actionf_t &operator=(actionf_v const &f) {
-    value = f;
-    return *this;
-  }
-
-  template <typename Ret, typename Arg>
-  constexpr actionf_t &operator=(Ret (*f)(Arg)) {
+  template <typename Arg> constexpr actionf_t &operator=(void (*f)(Arg)) {
     value = action1{f};
     return *this;
   }
 
-  template <typename Ret, typename Arg>
-  constexpr bool operator==(Ret (*f)(Arg)) const {
+  template <typename Arg> constexpr bool operator==(void (*f)(Arg)) const {
     return std::get<action1>(value) == f;
   }
 
@@ -140,10 +121,8 @@ public:
   }
 
   constexpr operator bool() const {
-    return !is_default_initialized() && !holds_empty_void_callback();
+    return !std::holds_alternative<std::monostate>(value);
   }
-
-  bool contains(actionf_p1 f) const { return (*this) == f; }
 
   bool call_if(mobj_thinker *mo) const {
     if (!(*this))
@@ -174,16 +153,6 @@ public:
   constexpr void operator()(mobj_t *mo, player_t *player, pspdef_t *psp) const {
     std::get<actionf_p3>(value)(mo, player, psp);
   }
-
-private:
-  constexpr bool is_default_initialized() const {
-    return std::holds_alternative<std::monostate>(value);
-  }
-
-  constexpr bool holds_empty_void_callback() const {
-    return std::holds_alternative<actionf_v>(value) &&
-           std::get<actionf_v>(value) == nullptr;
-  }
 };
 
 // Historically, "think_t" is yet another
@@ -192,7 +161,6 @@ private:
 // typedef actionf_t  think_t;
 
 struct thinker_t;
-extern void P_MobjThinker(mobj_t *);
 
 // Doubly linked list of actors.
 struct thinker_t {
@@ -200,15 +168,16 @@ struct thinker_t {
   struct thinker_t *next;
   actionf_t function;
 
+  thinker_t() = default;
+  thinker_t(actionf_t action) : function(action) {}
+
   //
   // P_RemoveThinker
   // Deallocation is lazy -- it will not actually be freed
   // until its thinking turn comes up.
   //
   constexpr void mark_for_removal() { function.remove(); }
-
   constexpr bool needs_removal() const { return function.is_removed(); }
-
   constexpr void reset() { function.reset(); }
 
   template <typename Arg> constexpr thinker_t &operator=(void (*f)(Arg)) {
@@ -231,14 +200,31 @@ template <typename T> T *thinker_cast(thinker_t &th) {
   return thinker_cast<T>(&th);
 }
 
-template <> struct thinker_trait<mobj_t> {
-  static constexpr const auto func = P_MobjThinker;
-};
-
 struct mobj_thinker {
   // List: thinker links.
   thinker_t thinker;
+
+  mobj_thinker() = default;
+  mobj_thinker(actionf_t action) : thinker(action) {}
+
+  constexpr bool needs_removal() { return thinker.needs_removal(); }
+
+  constexpr void mark_for_removal() { thinker.mark_for_removal(); }
+
+  constexpr bool has_any_action() { return thinker.has_any(); }
+
+protected:
+      void set_thinker(actionf_t action) { thinker = action; }
+      void reset() { thinker.reset(); }
 };
+
+template <typename T> T *thinker_cast(mobj_thinker *obj) {
+  return thinker_cast<T>(obj->thinker);
+}
+
+template <typename T> T *is_a(T *obj) {
+  return thinker_cast<T>(static_cast<mobj_thinker *>(obj));
+}
 
 class thinker_list {
   thinker_t sentinel;
@@ -290,7 +276,10 @@ public:
 
   void run();
 
-  uint32_t index_of(thinker_t *thinker);
+  constexpr uint32_t index_of(thinker_t *thinker);
+  constexpr uint32_t index_of(mobj_thinker *thinker) {
+    return index_of(&thinker->thinker);
+  }
   constexpr thinker_t *mobj_at(uintptr_t index);
 
 private:

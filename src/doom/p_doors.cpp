@@ -126,7 +126,7 @@ void vldoor_t::think()*/
 	      case vld_blazeRaise:
 	      case vld_blazeClose:
 		door->sector->specialdata = NULL;
-                door->thinker.mark_for_removal();
+                door->mark_for_removal();
 		// [crispy] fix "fast doors make two closing sounds"
 		if (!crispy->soundfix)
 		S_StartSound(&door->sector->soundorg, sfx_bdcls);
@@ -135,7 +135,7 @@ void vldoor_t::think()*/
 	      case vld_normal:
 	      case vld_close:
 		door->sector->specialdata = NULL;
-                door->thinker.mark_for_removal();  // unlink and free
+                door->mark_for_removal();  // unlink and free
 		break;
 		
 	      case vld_close30ThenOpen:
@@ -193,7 +193,7 @@ void vldoor_t::think()*/
 	      case vld_blazeOpen:
 	      case vld_open:
 		door->sector->specialdata = NULL;
-                door->thinker.mark_for_removal();  // unlink and free
+                door->mark_for_removal();  // unlink and free
 		break;
 		
 	      default:
@@ -288,11 +288,10 @@ EV_DoDoor
 	
 	// new door thinker
 	rtn = 1;
-	door = zmalloc<decltype(door)> (sizeof(*door), PU_LEVSPEC, 0);
+	door = znew<vldoor_t>();
 	thinker_list::instance.push_back(door);
 	sec->specialdata = door;
 
-	door->thinker =  T_VerticalDoor;
 	door->sector = sec;
 	door->type = type;
 	door->topwait = VDOORWAIT;
@@ -447,7 +446,7 @@ EV_VerticalDoor
 	    {
 		door->direction = 1;	// go back up
 		// [crispy] play sound effect when the door is opened again while going down
-		if (crispy->soundfix && thinker_cast<vldoor_t>(door->thinker))
+		if (crispy->soundfix && is_a(door))
 		S_StartSound(&door->sector->soundorg, line->special == 117 ? sfx_bdopn : sfx_doropn);
 	    }
 	    else
@@ -459,14 +458,14 @@ EV_VerticalDoor
                 // In Vanilla, door->direction is set, even though
                 // "specialdata" might not actually point at a door.
 
-                if (thinker_cast<vldoor_t>(door->thinker))
+                if (is_a(door))
                 {
                     door->direction = -1;	// start going down immediately
                     // [crispy] play sound effect when the door is closed manually
                     if (crispy->soundfix)
                     S_StartSound(&door->sector->soundorg, line->special == 117 ? sfx_bdcls : sfx_dorcls);
                 }
-                else if (auto* plat = thinker_cast<plat_t>(door->thinker); plat)
+                else if (auto* plat = thinker_cast<plat_t>(door); plat)
                 {
                     throw int(0xd34db33f);
                     // Erm, this is a plat, not a door.
@@ -515,10 +514,9 @@ EV_VerticalDoor
 	
     
     // new door thinker
-    door = zmalloc<decltype(door)> (sizeof(*door), PU_LEVSPEC, 0);
+    door = znew<vldoor_t>();
     thinker_list::instance.push_back(door);
     sec->specialdata = door;
-    door->thinker =  T_VerticalDoor;
     door->sector = sec;
     door->direction = 1;
     door->speed = VDOORSPEED;
@@ -563,14 +561,13 @@ EV_VerticalDoor
 //
 void P_SpawnDoorCloseIn30 (sector_t* sec)
 {
-    auto* door = zmalloc_one<vldoor_t> (PU_LEVSPEC);
+    auto* door = znew<vldoor_t>();
 
     thinker_list::instance.push_back(door);
 
     sec->specialdata = door;
     sec->special = 0;
 
-    door->thinker = T_VerticalDoor;
     door->sector = sec;
     door->direction = 0;
     door->type = vld_normal;
@@ -586,14 +583,13 @@ P_SpawnDoorRaiseIn5Mins
 ( sector_t*	sec,
   int		secnum )
 {
-    auto* door = zmalloc_one<vldoor_t> (PU_LEVSPEC);
+    auto* door = znew<vldoor_t>();
     
     thinker_list::instance.push_back(door);
 
     sec->specialdata = door;
     sec->special = 0;
 
-    door->thinker = T_VerticalDoor;
     door->sector = sec;
     door->direction = 2;
     door->type = vld_raiseIn5Mins;

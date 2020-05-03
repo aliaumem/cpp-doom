@@ -1514,10 +1514,9 @@ int EV_DoDonut(line_t*	line)
             }
 
 	    //	Spawn rising slime
-	    floor = zmalloc<decltype(floor)> (sizeof(*floor), PU_LEVSPEC, 0);
+	    floor = znew<floormove_t>();
 	    thinker_list::instance.push_back(floor);
 	    s2->specialdata = floor;
-	    floor->thinker.function =  T_MoveFloor;
 	    floor->type = donutRaise;
 	    floor->crush = false;
 	    floor->direction = 1;
@@ -1528,10 +1527,9 @@ int EV_DoDonut(line_t*	line)
 	    floor->floordestheight = s3_floorheight;
 	    
 	    //	Spawn lowering donut-hole
-	    floor = zmalloc<decltype(floor)> (sizeof(*floor), PU_LEVSPEC, 0);
+	    floor = znew<floormove_t>();
 	    thinker_list::instance.push_back(floor);
 	    s1->specialdata = floor;
-	    floor->thinker.function =  T_MoveFloor;
 	    floor->type = lowerFloor;
 	    floor->crush = false;
 	    floor->direction = -1;
@@ -1694,11 +1692,8 @@ void P_SpawnSpecials (void)
 
     
     //	Init other misc stuff
-    for (i = 0;i < MAXCEILINGS;i++)
-	activeceilings[i] = NULL;
-
-    for (i = 0;i < MAXPLATS;i++)
-	activeplats[i] = NULL;
+    activeceilings = {};
+    activeplats = {};
     
     for (i = 0;i < maxbuttons;i++)
 	memset(&buttonlist[i],0,sizeof(button_t));

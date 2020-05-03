@@ -482,8 +482,8 @@ static const actionsound_t actionsounds[] =
 // [crispy] play attack sound based on state action function (instead of state number)
 static int F_SoundForState (int st)
 {
-	void *const castaction = (void *) caststate->action.acv();
-	void *const nextaction = (void *) (&states[caststate->nextstate])->action.acv();
+	void *const castaction = caststate->action.as_ptr();
+	void *const nextaction = (&states[caststate->nextstate])->action.as_ptr();
 
 	// [crispy] fix Doomguy in casting sequence
 	if (castaction == NULL)
@@ -501,8 +501,8 @@ static int F_SoundForState (int st)
 		{
 			const actionsound_t *const as = &actionsounds[i];
 
-			if ((!as->early && castaction == as->action.acv()) ||
-			    (as->early && nextaction == as->action.acv()))
+			if ((!as->early && castaction == as->action.as_ptr()) ||
+			    (as->early && nextaction == as->action.as_ptr()))
 			{
 				return as->sound;
 			}

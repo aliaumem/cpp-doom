@@ -149,16 +149,12 @@ static void P_ReadFireFlicker (const char *key)
 	           &minlight) == 5 &&
 	    !strncmp(string, key, MAX_STRING_LEN))
 	{
-		fireflicker_t *flick;
-
-		flick = zmalloc<decltype(flick)>(sizeof(*flick), PU_LEVEL, NULL);
+		fireflicker_t *flick = znew<fireflicker_t>();
 
 		flick->sector = &sectors[sector];
 		flick->count = count;
 		flick->maxlight = maxlight;
 		flick->minlight = minlight;
-
-		flick->thinker = T_FireFlicker;
 
 		thinker_list::instance.push_back(flick);
 	}
@@ -178,7 +174,7 @@ static void P_WriteSoundTarget (const char *key)
 			M_snprintf(line, MAX_LINE_LEN, "%s %d %d\n",
 			           key,
 			           i,
-                       thinker_list::instance.index_of(&sector->soundtarget->thinker));
+                       thinker_list::instance.index_of(sector->soundtarget));
 			fputs(line, save_stream);
 		}
 	}

@@ -30,5 +30,19 @@ auto zmalloc_one(int tag, void* ptr = nullptr)
     return static_cast<DataType*>(Z_Malloc(sizeof(DataType), tag, ptr));
 }
 
+template <typename DataType, typename ... Args>
+auto znew(Args... args)
+{
+    auto* ptr = zmalloc_one<DataType>(PU_LEVSPEC);
+    return new (ptr) DataType{args...};
+}
+
+template <typename DataType>
+void zdelete(DataType* value)
+{
+    value.~DataType();
+    Z_Free(value);
+}
+
 
 #endif // CRISPY_DOOM_MEMORY_HPP

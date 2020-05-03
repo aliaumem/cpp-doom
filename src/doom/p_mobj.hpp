@@ -205,6 +205,7 @@ enum mobjflag_t
 // Map Object definition.
 struct mobj_t : mobj_thinker
 {
+    mobj_t();
     // Info for drawing: position.
     fixed_t		x;
     fixed_t		y;
@@ -291,6 +292,15 @@ struct mobj_t : mobj_thinker
 
 };
 
+
+extern void P_MobjThinker(mobj_t *);
+template <> struct thinker_trait<mobj_t> {
+    static constexpr const auto func = P_MobjThinker;
+};
+
+inline mobj_t::mobj_t()
+ : mobj_thinker(P_MobjThinker)
+{}
 
 
 #endif
