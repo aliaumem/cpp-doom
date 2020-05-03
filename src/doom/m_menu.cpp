@@ -165,7 +165,7 @@ void	(*routine)(int choice);
 
 // hotkey in menu
 char	alphaKey;
-char	*alttext; // [crispy] alternative text for the Options menu
+const char	*alttext; // [crispy] alternative text for the Options menu
 };
 
 
@@ -260,7 +260,7 @@ static void M_DrawCrispness4(void);
 //
 // DOOM MENU
 //
-enum
+enum main_e
 {
     newgame = 0,
     options,
@@ -269,7 +269,7 @@ enum
     readthis,
     quitdoom,
     main_end
-} main_e;
+};
 
 menuitem_t MainMenu[]=
 {
@@ -296,7 +296,7 @@ menu_t  MainDef =
 //
 // EPISODE SELECT
 //
-enum
+enum episodes_e
 {
     ep1,
     ep2,
@@ -304,7 +304,7 @@ enum
     ep4,
     ep5, // [crispy] Sigil
     ep_end
-} episodes_e;
+};
 
 menuitem_t EpisodeMenu[]=
 {
@@ -328,12 +328,12 @@ menu_t  EpiDef =
 //
 // EXPANSION SELECT
 //
-enum
+enum expansions_e
 {
     ex1,
     ex2,
     ex_end
-} expansions_e;
+};
 
 static menuitem_t ExpansionMenu[]=
 {
@@ -354,7 +354,7 @@ static menu_t  ExpDef =
 //
 // NEW GAME
 //
-enum
+enum newgame_e
 {
     killthings,
     toorough,
@@ -362,7 +362,7 @@ enum
     violence,
     nightmare,
     newg_end
-} newgame_e;
+};
 
 menuitem_t NewGameMenu[]=
 {
@@ -388,7 +388,7 @@ menu_t  NewDef =
 //
 // OPTIONS MENU
 //
-enum
+enum options_e
 {
     endgame,
     messages,
@@ -399,7 +399,7 @@ enum
     soundvol,
     crispness, // [crispy] Crispness menu
     opt_end
-} options_e;
+};
 
 menuitem_t OptionsMenu[]=
 {
@@ -424,7 +424,7 @@ menu_t  OptionsDef =
 };
 
 // [crispy] mouse sensitivity menu
-enum
+enum mouse_e
 {
     mouse_horiz,
     mouse_empty1,
@@ -434,7 +434,7 @@ enum
     mouse_empty3,
     mouse_invert,
     mouse_end
-} mouse_e;
+};
 
 static menuitem_t MouseMenu[]=
 {
@@ -458,7 +458,7 @@ static menu_t  MouseDef =
 };
 
 // [crispy] Crispness menu
-enum
+enum crispness1_e
 {
     crispness_sep_rendering,
     crispness_hires,
@@ -480,7 +480,7 @@ enum
     crispness1_next,
     crispness1_prev,
     crispness1_end
-} crispness1_e;
+};
 
 static menuitem_t Crispness1Menu[]=
 {
@@ -513,7 +513,7 @@ static menu_t  Crispness1Def =
     1
 };
 
-enum
+enum crispness2_e
 {
     crispness_sep_audible,
     crispness_soundfull,
@@ -533,7 +533,7 @@ enum
     crispness2_next,
     crispness2_prev,
     crispness2_end
-} crispness2_e;
+};
 
 static menuitem_t Crispness2Menu[]=
 {
@@ -564,7 +564,7 @@ static menu_t  Crispness2Def =
     1
 };
 
-enum
+enum crispness3_e
 {
     crispness_sep_tactical,
     crispness_freelook,
@@ -586,7 +586,7 @@ enum
     crispness3_next,
     crispness3_prev,
     crispness3_end
-} crispness3_e;
+};
 
 static menuitem_t Crispness3Menu[]=
 {
@@ -619,7 +619,7 @@ static menu_t  Crispness3Def =
     1
 };
 
-enum
+enum crispness4_e
 {
     crispness_sep_physical,
     crispness_freeaim,
@@ -637,7 +637,7 @@ enum
     crispness4_next,
     crispness4_prev,
     crispness4_end
-} crispness4_e;
+};
 
 
 static menuitem_t Crispness4Menu[]=
@@ -680,11 +680,11 @@ static int crispness_cur;
 //
 // Read This! MENU 1 & 2
 //
-enum
+enum read_e
 {
     rdthsempty1,
     read1_end
-} read_e;
+};
 
 menuitem_t ReadMenu1[] =
 {
@@ -701,11 +701,11 @@ menu_t  ReadDef1 =
     0
 };
 
-enum
+enum read_e2
 {
     rdthsempty2,
     read2_end
-} read_e2;
+};
 
 menuitem_t ReadMenu2[]=
 {
@@ -725,14 +725,14 @@ menu_t  ReadDef2 =
 //
 // SOUND VOLUME MENU
 //
-enum
+enum sound_e
 {
     sfx_vol,
     sfx_empty1,
     music_vol,
     sfx_empty2,
     sound_end
-} sound_e;
+};
 
 menuitem_t SoundMenu[]=
 {
@@ -755,7 +755,7 @@ menu_t  SoundDef =
 //
 // LOAD GAME MENU
 //
-enum
+enum load_e
 {
     load1,
     load2,
@@ -766,7 +766,7 @@ enum
     load7, // [crispy] up to 8 savegames
     load8, // [crispy] up to 8 savegames
     load_end
-} load_e;
+};
 
 menuitem_t LoadMenu[]=
 {
@@ -1459,21 +1459,21 @@ static void M_DrawCrispnessBackground(void)
 
 static char crispy_menu_text[48];
 
-static void M_DrawCrispnessHeader(char *item)
+static void M_DrawCrispnessHeader(const char *item)
 {
     M_snprintf(crispy_menu_text, sizeof(crispy_menu_text),
                "%s%s", crstr[CR_GOLD], item);
     M_WriteText(ORIGWIDTH/2 - M_StringWidth(item) / 2, 12, crispy_menu_text);
 }
 
-static void M_DrawCrispnessSeparator(int y, char *item)
+static void M_DrawCrispnessSeparator(int y, const char *item)
 {
     M_snprintf(crispy_menu_text, sizeof(crispy_menu_text),
                "%s%s", crstr[CR_GOLD], item);
     M_WriteText(currentMenu->x - 8, currentMenu->y + CRISPY_LINEHEIGHT * y, crispy_menu_text);
 }
 
-static void M_DrawCrispnessItem(int y, char *item, int feat, boolean cond)
+static void M_DrawCrispnessItem(int y, const char *item, int feat, boolean cond)
 {
     M_snprintf(crispy_menu_text, sizeof(crispy_menu_text),
                "%s%s: %s%s", cond ? crstr[CR_NONE] : crstr[CR_DARK], item,
@@ -1482,7 +1482,7 @@ static void M_DrawCrispnessItem(int y, char *item, int feat, boolean cond)
     M_WriteText(currentMenu->x, currentMenu->y + CRISPY_LINEHEIGHT * y, crispy_menu_text);
 }
 
-static void M_DrawCrispnessMultiItem(int y, char *item, multiitem_t *multiitem, int feat, boolean cond)
+static void M_DrawCrispnessMultiItem(int y, const char *item, multiitem_t *multiitem, int feat, boolean cond)
 {
     M_snprintf(crispy_menu_text, sizeof(crispy_menu_text),
                "%s%s: %s%s", cond ? crstr[CR_NONE] : crstr[CR_DARK], item,
@@ -1491,7 +1491,7 @@ static void M_DrawCrispnessMultiItem(int y, char *item, multiitem_t *multiitem, 
     M_WriteText(currentMenu->x, currentMenu->y + CRISPY_LINEHEIGHT * y, crispy_menu_text);
 }
 
-static void M_DrawCrispnessGoto(int y, char *item)
+static void M_DrawCrispnessGoto(int y, const char *item)
 {
     M_snprintf(crispy_menu_text, sizeof(crispy_menu_text),
                "%s%s", crstr[CR_GOLD], item);
@@ -3002,7 +3002,7 @@ void M_Drawer (void)
 
 	    if (currentMenu == &OptionsDef)
 	    {
-		char *alttext = currentMenu->menuitems[i].alttext;
+		const char *alttext = currentMenu->menuitems[i].alttext;
 
 		if (alttext)
 		    M_WriteText(x, y+8-(M_StringHeight(alttext)/2), alttext);

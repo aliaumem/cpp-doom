@@ -56,37 +56,32 @@ slidename_t	slideFrameNames[MAXSLIDEDOORS] =
 //
 // T_VerticalDoor
 //
-
-void T_VerticalDoor (vldoor_t* door)
-/*{
-    door->think();
-}
-
-void vldoor_t::think()*/
+void vldoor_t::perform()
+//void T_VerticalDoor (vldoor_t* door)
 {
     result_e	res;
 	
-    switch(door->direction)
+    switch(direction)
     {
       case 0:
 	// WAITING
-	if (!--door->topcountdown)
+	if (!--topcountdown)
 	{
-	    switch(door->type)
+	    switch(type)
 	    {
 	      case vld_blazeRaise:
-		door->direction = -1; // time to go back down
-		S_StartSound(&door->sector->soundorg, sfx_bdcls);
+		direction = -1; // time to go back down
+		S_StartSound(&sector->soundorg, sfx_bdcls);
 		break;
 		
 	      case vld_normal:
-		door->direction = -1; // time to go back down
-		S_StartSound(&door->sector->soundorg, sfx_dorcls);
+		direction = -1; // time to go back down
+		S_StartSound(&sector->soundorg, sfx_dorcls);
 		break;
 		
 	      case vld_close30ThenOpen:
-		door->direction = 1;
-		S_StartSound(&door->sector->soundorg, sfx_doropn);
+		direction = 1;
+		S_StartSound(&sector->soundorg, sfx_doropn);
 		break;
 		
 	      default:
@@ -97,14 +92,14 @@ void vldoor_t::think()*/
 	
       case 2:
 	//  INITIAL WAIT
-	if (!--door->topcountdown)
+	if (!--topcountdown)
 	{
-	    switch(door->type)
+	    switch(type)
 	    {
 	      case vld_raiseIn5Mins:
-		door->direction = 1;
-		door->type = vld_normal;
-		S_StartSound(&door->sector->soundorg, sfx_doropn);
+		direction = 1;
+		type = vld_normal;
+		S_StartSound(&sector->soundorg, sfx_doropn);
 		break;
 		
 	      default:
@@ -115,32 +110,32 @@ void vldoor_t::think()*/
 	
       case -1:
 	// DOWN
-	res = T_MovePlane(door->sector,
-			  door->speed,
-			  door->sector->floorheight,
-			  false,1,door->direction);
+	res = T_MovePlane(sector,
+			  speed,
+			  sector->floorheight,
+			  false,1,direction);
 	if (res == pastdest)
 	{
-	    switch(door->type)
+	    switch(type)
 	    {
 	      case vld_blazeRaise:
 	      case vld_blazeClose:
-		door->sector->specialdata = NULL;
-                door->mark_for_removal();
+		sector->specialdata = NULL;
+                mark_for_removal();
 		// [crispy] fix "fast doors make two closing sounds"
 		if (!crispy->soundfix)
-		S_StartSound(&door->sector->soundorg, sfx_bdcls);
+		S_StartSound(&sector->soundorg, sfx_bdcls);
 		break;
 		
 	      case vld_normal:
 	      case vld_close:
-		door->sector->specialdata = NULL;
-                door->mark_for_removal();  // unlink and free
+		sector->specialdata = NULL;
+                mark_for_removal();  // unlink and free
 		break;
 		
 	      case vld_close30ThenOpen:
-		door->direction = 0;
-		door->topcountdown = TICRATE*30;
+		direction = 0;
+		topcountdown = TICRATE*30;
 		break;
 		
 	      default:
@@ -149,7 +144,7 @@ void vldoor_t::think()*/
 	}
 	else if (res == crushed)
 	{
-	    switch(door->type)
+	    switch(type)
 	    {
 	      case vld_blazeClose:
 	      case vld_close:		// DO NOT GO BACK UP!
@@ -159,14 +154,14 @@ void vldoor_t::think()*/
 	      case vld_blazeRaise:
 		if (crispy->soundfix)
 		{
-		door->direction = 1;
-		S_StartSound(&door->sector->soundorg, sfx_bdopn);
+		direction = 1;
+		S_StartSound(&sector->soundorg, sfx_bdopn);
 		break;
 		}
 
 	      default:
-		door->direction = 1;
-		S_StartSound(&door->sector->soundorg, sfx_doropn);
+		direction = 1;
+		S_StartSound(&sector->soundorg, sfx_doropn);
 		break;
 	    }
 	}
@@ -174,26 +169,26 @@ void vldoor_t::think()*/
 	
       case 1:
 	// UP
-	res = T_MovePlane(door->sector,
-			  door->speed,
-			  door->topheight,
-			  false,1,door->direction);
+	res = T_MovePlane(sector,
+			  speed,
+			  topheight,
+			  false,1,direction);
 	
 	if (res == pastdest)
 	{
-	    switch(door->type)
+	    switch(type)
 	    {
 	      case vld_blazeRaise:
 	      case vld_normal:
-		door->direction = 0; // wait at top
-		door->topcountdown = door->topwait;
+		direction = 0; // wait at top
+		topcountdown = topwait;
 		break;
 		
 	      case vld_close30ThenOpen:
 	      case vld_blazeOpen:
 	      case vld_open:
-		door->sector->specialdata = NULL;
-                door->mark_for_removal();  // unlink and free
+		sector->specialdata = NULL;
+                mark_for_removal();  // unlink and free
 		break;
 		
 	      default:

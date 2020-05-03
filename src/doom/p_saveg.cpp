@@ -175,26 +175,21 @@ static void saveg_writep(const void *p) {
 #define saveg_read_enum saveg_read32
 #define saveg_write_enum saveg_write32
 
-template <typename Enum, typename Enabled = std::enable_if_t<std::is_enum_v<Enum>>>
+template <typename Enum,
+          typename Enabled = std::enable_if_t<std::is_enum_v<Enum>>>
 Enum savegame_read() {
   return static_cast<Enum>(saveg_read32());
 }
-template <typename Enum, typename Enabled = std::enable_if_t<std::is_enum_v<Enum>>>
+template <typename Enum,
+          typename Enabled = std::enable_if_t<std::is_enum_v<Enum>>>
 void savegame_write(Enum value) {
   saveg_write32(
       static_cast<int>(static_cast<std::underlying_type_t<Enum>>(value)));
 }
 
-void savegame_write(sector_t* sector)
-{
-    saveg_write32(sector - sectors);
-}
+void savegame_write(sector_t *sector) { saveg_write32(sector - sectors); }
 
-sector_t* savegame_read_sector()
-{
-    return &sectors[saveg_read32()];
-}
-
+sector_t *savegame_read_sector() { return &sectors[saveg_read32()]; }
 
 //
 // Structure read/write functions
@@ -388,13 +383,13 @@ static mobj_t *saveg_read_mobj_t() {
 
 // [crispy] enumerate all thinker pointers
 uint32_t thinker_list::index_of(mobj_t *mobj) {
-    if(!mobj)
-       return 0;
-    assert(is_a<mobj_t>(mobj));
+  if (!mobj)
+    return 0;
+  assert(is_a<mobj_t>(mobj));
 
   uint32_t i = 0;
   for (auto *th : *this) {
-    if (auto* mt = thinker_cast<mobj_t>(th); mt) {
+    if (auto *mt = thinker_cast<mobj_t>(th); mt) {
       ++i;
       if (mt == mobj)
         return i;
@@ -411,7 +406,7 @@ mobj_t *thinker_list::mobj_at(uintptr_t index) {
 
   uint32_t i = 0;
   for (auto *th : *this) {
-    if (auto* mobj = thinker_cast<mobj_t>(th); mobj) {
+    if (auto *mobj = thinker_cast<mobj_t>(th); mobj) {
       ++i;
       if (i == index)
         return mobj;
@@ -954,15 +949,15 @@ static void saveg_write(plat_t *str) {
 //
 template <> lightflash_t *saveg_read() {
   savegame_read_thinker_space();
-  auto *flash = znew<lightflash_t>();
-  flash->sector = savegame_read_sector();
-  flash->count = saveg_read32();
-  flash->maxlight = saveg_read32();
-  flash->minlight = saveg_read32();
-  flash->maxtime = saveg_read32();
-  flash->mintime = saveg_read32();
+  auto *sector = savegame_read_sector();
+  auto count = saveg_read32();
+  auto maxlight = saveg_read32();
+  auto minlight = saveg_read32();
+  auto maxtime = saveg_read32();
+  auto mintime = saveg_read32();
 
-  return flash;
+  return znew<lightflash_t>(basic_light{sector, maxlight, minlight}, count,
+                            maxtime, mintime);
 }
 
 static void saveg_write(lightflash_t *str) {
@@ -980,15 +975,16 @@ static void saveg_write(lightflash_t *str) {
 //
 template <> strobe_t *saveg_read() {
   savegame_read_thinker_space();
-  auto *strobe = znew<strobe_t>();
-  strobe->sector = savegame_read_sector();
-  strobe->count = saveg_read32();
-  strobe->minlight = saveg_read32();
-  strobe->maxlight = saveg_read32();
-  strobe->darktime = saveg_read32();
-  strobe->brighttime = saveg_read32();
 
-  return strobe;
+  auto *sector = savegame_read_sector();
+  auto count = saveg_read32();
+  auto minlight = saveg_read32();
+  auto maxlight = saveg_read32();
+  auto darktime = saveg_read32();
+  auto brighttime = saveg_read32();
+
+  return znew<strobe_t>(basic_light{sector, maxlight, minlight}, count,
+                        darktime, brighttime);
 }
 
 static void saveg_write(strobe_t *str) {
@@ -1006,13 +1002,12 @@ static void saveg_write(strobe_t *str) {
 //
 template <> glow_t *saveg_read() {
   savegame_read_thinker_space();
-  auto *glow = znew<glow_t>();
-  glow->sector = savegame_read_sector();
-  glow->minlight = saveg_read32();
-  glow->maxlight = saveg_read32();
-  glow->direction = saveg_read32();
+  auto* sector = savegame_read_sector();
+  auto minlight = saveg_read32();
+  auto maxlight = saveg_read32();
+  auto direction = savegame_read<glow_t::direction>();
 
-  return glow;
+  return znew<glow_t>(basic_light{sector, maxlight, minlight}, direction);
 }
 
 static void saveg_write(glow_t *str) {
@@ -1020,7 +1015,7 @@ static void saveg_write(glow_t *str) {
   savegame_write(str->sector);
   saveg_write32(str->minlight);
   saveg_write32(str->maxlight);
-  saveg_write32(str->direction);
+  savegame_write(str->dir);
 }
 
 template <typename T> static void saveg_read_special() {
@@ -1274,8 +1269,6 @@ enum thinkerclass_t {
 
 };
 
-
-
 //
 // P_ArchiveThinkers
 //
@@ -1349,14 +1342,19 @@ void P_UnArchiveThinkers(void) {
 void P_RestoreTargets(void) {
   for (auto *th : thinker_list::instance) {
     if (auto *mo = thinker_cast<mobj_t>(th); mo) {
-      mo->target = thinker_list::instance.mobj_at(reinterpret_cast<uintptr_t>(mo->target));
-      mo->tracer = thinker_list::instance.mobj_at(reinterpret_cast<uintptr_t>(mo->tracer));
+      mo->target = thinker_list::instance.mobj_at(
+          reinterpret_cast<uintptr_t>(mo->target));
+      mo->tracer = thinker_list::instance.mobj_at(
+          reinterpret_cast<uintptr_t>(mo->tracer));
     }
   }
 
   if (restoretargets_fail) {
-    fprintf(stderr, "P_RestoreTargets: Failed to restore %d/%d target pointers.\n",
-            restoretargets_fail, static_cast<int>(std::distance(thinker_list::instance.begin(), thinker_list::instance.end())));
+    fprintf(stderr,
+            "P_RestoreTargets: Failed to restore %d/%d target pointers.\n",
+            restoretargets_fail,
+            static_cast<int>(std::distance(thinker_list::instance.begin(),
+                                           thinker_list::instance.end())));
     restoretargets_fail = 0;
   }
 }
@@ -1403,7 +1401,8 @@ template <typename T> void saveg_write_special(T *special) {
 void P_ArchiveSpecials(void) {
   // save off the current thinkers
   for (auto *th : thinker_list::instance) {
-    if (!th->has_any_action()) {
+    if (auto *movable = thinker_cast<movable_obj>(th);
+        movable && !movable->has_any_action()) {
       auto ceilIt = std::find(activeceilings.begin(), activeceilings.end(),
                               reinterpret_cast<ceiling_t *>(th));
       if (ceilIt != activeceilings.end())

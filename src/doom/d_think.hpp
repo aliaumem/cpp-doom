@@ -31,82 +31,34 @@
 //  action functions cleanly.
 //
 
-struct mobj_thinker;
 struct mobj_t;
 struct player_t;
 struct pspdef_t;
-struct vldoor_t;
-struct ceiling_t;
-struct fireflicker_t;
-struct floormove_t;
-struct glow_t;
-struct plat_t;
-struct strobe_t;
-struct lightflash_t;
-struct thinker_t;
-
-struct action_removed {};
 
 typedef void (*actionf_p1)(mobj_t *mo);
-typedef void (*actionf_pthink1)(mobj_thinker *mo);
-typedef void (*actionf_vldoor)(vldoor_t *mo);
-typedef void (*actionf_ceiling)(ceiling_t *mo);
-typedef void (*actionf_fireflicker)(fireflicker_t *mo);
-typedef void (*actionf_floormove)(floormove_t *mo);
-typedef void (*actionf_glow)(glow_t *mo);
-typedef void (*actionf_plat)(plat_t *mo);
-typedef void (*actionf_strobe)(strobe_t *mo);
-typedef void (*actionf_lightflash)(lightflash_t *mo);
 typedef void (*actionf_p3)(mobj_t *mo, player_t *player,
                            pspdef_t *psp); // [crispy] let pspr action pointers
                                            // get called from mobj states
 
 struct actionf_t {
-  struct action1 {
-    std::variant<actionf_p1, actionf_pthink1, actionf_vldoor, actionf_ceiling,
-                 actionf_fireflicker, actionf_floormove, actionf_strobe,
-                 actionf_glow, actionf_plat, actionf_lightflash>
-        action;
-
-    template <typename Arg> constexpr bool operator==(void (*f)(Arg)) const {
-      using fptr = void (*)(Arg);
-      return std::holds_alternative<fptr>(action) &&
-             std::get<fptr>(action) == f;
-    }
-
-    void invoke(mobj_thinker *t) {
-      std::visit(
-          [&t]<typename Arg>(void (*f)(Arg)) { f(reinterpret_cast<Arg>(t)); },
-          action);
-    }
-
-    void *as_ptr() const {
-      return std::visit([](auto &&f) { return reinterpret_cast<void *>(f); },
-                        action);
-    }
-  };
-  std::variant<std::monostate, action_removed, actionf_p3, action1> value;
+  std::variant<std::monostate, actionf_p3, actionf_p1> value;
 
 public:
-  void *as_ptr() const { return std::get<action1>(value).as_ptr(); }
-  actionf_t &operator=(void *f) {
-    value = action1{reinterpret_cast<actionf_p1>(f)};
-    return *this;
-  }
-
   constexpr actionf_t() = default;
-
-  template <typename Arg>
-  constexpr actionf_t(void (*f)(Arg)) : value{action1{f}} {}
+  constexpr actionf_t(actionf_p1 a) : value(a) {}
   constexpr actionf_t(actionf_p3 f) : value{f} {}
 
-  template <typename Arg> constexpr actionf_t &operator=(void (*f)(Arg)) {
-    value = action1{f};
+  void *as_ptr() const {
+    return reinterpret_cast<void *>(std::get<actionf_p1>(value));
+  }
+
+  constexpr actionf_t &operator=(actionf_p1 f) {
+    value = f;
     return *this;
   }
 
-  template <typename Arg> constexpr bool operator==(void (*f)(Arg)) const {
-    return std::get<action1>(value) == f;
+  constexpr bool operator==(actionf_p1 f) const {
+    return std::get<actionf_p1>(value) == f;
   }
 
   constexpr bool operator==(actionf_p3 f) const {
@@ -115,32 +67,16 @@ public:
 
   constexpr void reset() { value = std::monostate{}; }
 
-  void remove() { value = action_removed{}; }
-
-  bool is_removed() const {
-    return std::holds_alternative<action_removed>(value);
-  }
-
   constexpr operator bool() const {
     return !std::holds_alternative<std::monostate>(value);
   }
 
-  bool call_if(mobj_thinker *mo) const {
-    if (!(*this))
-      return false;
-
-    std::visit(
-        [&mo](auto val) {
-          if constexpr (std::is_same_v<action1, decltype(val)>) {
-            static_cast<action1>(val).invoke(mo);
-          }
-        },
-        value);
-    return true;
-  }
-
-  bool call_if(thinker_t *t) const {
-    return call_if(reinterpret_cast<mobj_thinker *>(t));
+  constexpr bool call_if(mobj_t *mo) const {
+    if (std::holds_alternative<actionf_p1>(value)) {
+      std::get<actionf_p1>(value)(mo);
+      return true;
+    }
+    return false;
   }
 
   constexpr bool call_if(mobj_t *mo, player_t *player, pspdef_t *psp) {
@@ -156,30 +92,19 @@ public:
   }
 };
 
-template <typename T> struct thinker_trait;
-
 struct mobj_thinker {
   // List: thinker links.
-  actionf_t function;
+  bool is_removed = false;
 
-  mobj_thinker() = default;
-  mobj_thinker(actionf_t action) : function(action) {}
+  virtual void perform() = 0;
 
-  constexpr bool needs_removal() { return function.is_removed(); }
+  constexpr bool needs_removal() { return is_removed; }
 
-  constexpr void mark_for_removal() { function.remove(); }
-
-  constexpr bool has_any_action() { return function; }
-
-protected:
-  template <typename T> void enable() { function = thinker_trait<T>::func; }
-  void disable() { function.reset(); }
+  constexpr void mark_for_removal() { is_removed = true; }
 };
 
 template <typename T> T *thinker_cast(mobj_thinker *obj) {
-    if (obj->function == thinker_trait<T>::func)
-        return reinterpret_cast<T *>(obj);
-    return nullptr;
+  return dynamic_cast<T *>(obj);
 }
 
 template <typename T> T *is_a(T *obj) {
@@ -207,7 +132,7 @@ public:
   mobj_t *mobj_at(uintptr_t index);
 
 private:
-      void clear_removed();
+  void clear_removed();
 };
 
 inline thinker_list thinker_list::instance{};

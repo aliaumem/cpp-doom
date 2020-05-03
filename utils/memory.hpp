@@ -34,7 +34,7 @@ template <typename DataType, typename ... Args>
 auto znew(Args... args)
 {
     auto* ptr = zmalloc_one<DataType>(PU_LEVSPEC);
-    return new (ptr) DataType{args...};
+    return new (ptr) DataType{std::forward<Args>(args)...};
 }
 
 template <typename DataType>

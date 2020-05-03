@@ -529,6 +529,10 @@ static inline void MusInfoThinker (mobj_t *thing)
 //
 // P_MobjThinker
 //
+void mobj_t::perform() {
+    P_MobjThinker(this);
+}
+
 void P_MobjThinker (mobj_t* mobj)
 {
     // [crispy] support MUSINFO lump (dynamic music changing)
@@ -627,9 +631,9 @@ P_SpawnMobjSafe
     state_t*	st;
     mobjinfo_t*	info;
 	
-    mobj_t* mobj = zmalloc_one<mobj_t> (PU_LEVEL);
-    memset (mobj, 0, sizeof (*mobj));
-    new (mobj) mobj_t();
+    mobj_t* mobj = znew<mobj_t>();
+    //memset (mobj, 0, sizeof (*mobj));
+    //new (mobj) mobj_t();
     info = &mobjinfo[type];
 	
     mobj->type = type;

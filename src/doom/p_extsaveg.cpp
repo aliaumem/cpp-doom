@@ -117,9 +117,6 @@ static void P_ReadTotalLevelTimes (const char *key)
 }
 
 // T_FireFlicker()
-
-extern void T_FireFlicker (fireflicker_t* flick);
-
 static void P_WriteFireFlicker (const char *key)
 {
 	for (auto* th : thinker_list::instance)
@@ -149,14 +146,7 @@ static void P_ReadFireFlicker (const char *key)
 	           &minlight) == 5 &&
 	    !strncmp(string, key, MAX_STRING_LEN))
 	{
-		fireflicker_t *flick = znew<fireflicker_t>();
-
-		flick->sector = &sectors[sector];
-		flick->count = count;
-		flick->maxlight = maxlight;
-		flick->minlight = minlight;
-
-		thinker_list::instance.push_back(flick);
+		znew<fireflicker_t>(basic_light{&sectors[sector], maxlight, minlight}, count);
 	}
 }
 

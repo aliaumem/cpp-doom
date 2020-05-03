@@ -82,49 +82,87 @@ int EV_DoDonut(line_t *line);
 //
 // P_LIGHTS
 //
-struct fireflicker_t : mobj_thinker {
-  fireflicker_t();
+struct min_light_offset
+{
+    int offset;
+};
+
+struct basic_light {
+  basic_light(sector_t *sector)
+      : sector{sector}, maxlight{sector->lightlevel},
+        minlight{P_FindMinSurroundingLight(sector, sector->lightlevel)} {}
+
+    basic_light(sector_t* sector, min_light_offset offset)
+    : basic_light(sector)
+    {
+      minlight += offset.offset;
+    }
+
+    basic_light(sector_t* sector, int maxlight, int minlight)
+    : sector{sector}, maxlight{maxlight}, minlight{minlight}
+    {}
+
   sector_t *sector;
-  int count;
   int maxlight;
   int minlight;
 };
 
-void T_FireFlicker(fireflicker_t *);
+struct fireflicker_t final : mobj_thinker, basic_light {
+  fireflicker_t(basic_light &&light, int count)
+      : basic_light{std::move(light)}, count{count} {
+    thinker_list::instance.push_back(this);
+  }
 
-inline fireflicker_t::fireflicker_t() : mobj_thinker(T_FireFlicker) {}
+  int count;
 
-template <> struct thinker_trait<fireflicker_t> {
-  constexpr const static auto func = T_FireFlicker;
+  void perform() final;
 };
 
-struct lightflash_t : mobj_thinker {
-  lightflash_t();
+struct lightflash_t final : mobj_thinker, basic_light {
+  lightflash_t(basic_light &&light, int count, int maxtime, int mintime)
+      : basic_light{std::move(light)}, count{count}, maxtime{maxtime},
+        mintime{mintime} {
+    thinker_list::instance.push_back(this);
+  }
 
-  sector_t *sector;
   int count;
-  int maxlight;
-  int minlight;
   int maxtime;
   int mintime;
+
+  void perform() final;
 };
 
-struct strobe_t : mobj_thinker {
-  strobe_t();
-  sector_t *sector;
+struct strobe_t final : mobj_thinker, basic_light {
+  strobe_t(basic_light &&light, int count, int darktime, int brighttime)
+      : basic_light{std::move(light)}, count{count}, darktime{darktime},
+        brighttime{brighttime} {
+    if (minlight == maxlight)
+      minlight = 0;
+
+    thinker_list::instance.push_back(this);
+  }
+
   int count;
-  int minlight;
-  int maxlight;
   int darktime;
   int brighttime;
+
+  void perform() final;
 };
 
-struct glow_t : mobj_thinker {
-  glow_t();
-  sector_t *sector;
-  int minlight;
-  int maxlight;
-  int direction;
+struct glow_t final : mobj_thinker, basic_light {
+    enum class direction
+    {
+        down = -1,
+        up = 1
+    };
+  glow_t(basic_light &&light, direction direction)
+      : basic_light{light}, dir{direction} {
+    thinker_list::instance.push_back(this);
+  }
+
+  direction dir;
+
+  void perform() final;
 };
 
 #define GLOWSPEED 8
@@ -147,23 +185,8 @@ void EV_LightTurnOn(line_t *line, int bright);
 void T_Glow(glow_t *g);
 void P_SpawnGlowingLight(sector_t *sector);
 
-template <> struct thinker_trait<lightflash_t> {
-  constexpr const static auto func = T_LightFlash;
-};
+inline void strobe_t::perform() { T_StrobeFlash(this); }
 
-template <> struct thinker_trait<strobe_t> {
-  constexpr const static auto func = T_StrobeFlash;
-};
-
-template <> struct thinker_trait<glow_t> {
-  constexpr const static auto func = T_Glow;
-};
-
-inline lightflash_t::lightflash_t() : mobj_thinker(T_LightFlash) {}
-
-inline strobe_t::strobe_t() : mobj_thinker(T_StrobeFlash) {}
-
-inline glow_t::glow_t() : mobj_thinker(T_Glow) {}
 
 //
 // P_SWITCH
@@ -226,15 +249,31 @@ enum plattype_e {
 
 };
 
+struct movable_obj : mobj_thinker {
+  movable_obj(bool is_moving = true) : is_moving(is_moving) {}
+
+  void perform() final {
+    if (is_moving)
+      move();
+  }
+
+  void start_moving() { is_moving = true; }
+  void stop_moving() { is_moving = false; }
+
+  constexpr bool has_any_action() { return is_moving; }
+
+protected:
+  virtual void move() = 0;
+
+private:
+  bool is_moving;
+};
+
 struct plat_t;
 extern void T_PlatRaise(plat_t *);
 
-struct plat_t : mobj_thinker {
-  plat_t(bool has_thinker = true)
-      : mobj_thinker(has_thinker ? T_PlatRaise : nullptr) {}
-
-  void start_moving() { enable<plat_t>(); }
-  void stop_moving() { disable(); }
+struct plat_t : movable_obj {
+  plat_t(bool is_moving = true) : movable_obj(is_moving) {}
 
   sector_t *sector;
   fixed_t speed;
@@ -247,6 +286,9 @@ struct plat_t : mobj_thinker {
   boolean crush;
   int tag;
   plattype_e type;
+
+protected:
+  void move() final { T_PlatRaise(this); }
 };
 
 #define PLATWAIT 3
@@ -256,10 +298,6 @@ struct plat_t : mobj_thinker {
 extern std::array<plat_t *, MAXPLATS> activeplats;
 
 void T_PlatRaise(plat_t *plat);
-
-template <> struct thinker_trait<plat_t> {
-  constexpr const static auto func = T_PlatRaise;
-};
 
 int EV_DoPlat(line_t *line, plattype_e type, int amount);
 
@@ -286,13 +324,13 @@ enum vldoor_e {
 struct vldoor_t;
 extern void T_VerticalDoor(vldoor_t *);
 
-struct vldoor_t : mobj_thinker {
+struct vldoor_t final : mobj_thinker {
   vldoor_e type;
   sector_t *sector;
   fixed_t topheight;
   fixed_t speed;
 
-  vldoor_t() : mobj_thinker(T_VerticalDoor) {}
+  void perform();
 
   // 1 = up, 0 = waiting at top, -1 = down
   int direction;
@@ -302,14 +340,6 @@ struct vldoor_t : mobj_thinker {
   // (keep in case a door going down is reset)
   // when it reaches 0, start going down
   int topcountdown;
-
-  // void think() override;
-};
-
-extern void T_VerticalDoor(vldoor_t *);
-
-template <> struct thinker_trait<vldoor_t> {
-  constexpr const static auto func = T_VerticalDoor;
 };
 
 #define VDOORSPEED FRACUNIT * 2
@@ -424,11 +454,8 @@ enum ceiling_e {
 struct ceiling_t;
 extern void T_MoveCeiling(ceiling_t *);
 
-struct ceiling_t : mobj_thinker {
-  ceiling_t(bool has_thinker = true) : mobj_thinker{has_thinker ? T_MoveCeiling : nullptr} {}
-
-  void start_moving() { enable<ceiling_t>(); }
-  void stop_moving() { disable(); }
+struct ceiling_t : movable_obj {
+  ceiling_t(bool is_moving = true) : movable_obj(is_moving) {}
 
   ceiling_e type;
   sector_t *sector;
@@ -444,7 +471,8 @@ struct ceiling_t : mobj_thinker {
   int tag;
   int olddirection;
 
-  // void think() override;
+protected:
+  void move() final;
 };
 
 #define CEILSPEED FRACUNIT
@@ -460,10 +488,6 @@ void P_AddActiveCeiling(ceiling_t *c);
 void P_RemoveActiveCeiling(ceiling_t *c);
 int EV_CeilingCrushStop(line_t *line);
 void P_ActivateInStasisCeiling(line_t *line);
-
-template <> struct thinker_trait<ceiling_t> {
-  constexpr const static auto func = T_MoveCeiling;
-};
 
 //
 // P_FLOOR
@@ -511,9 +535,8 @@ enum stair_e {
 struct floormove_t;
 extern void T_MoveFloor(floormove_t *);
 
-struct floormove_t : mobj_thinker {
-  floormove_t() : mobj_thinker(T_MoveFloor) {}
-  floormove_t(actionf_t action) : mobj_thinker(action) {}
+struct floormove_t final : mobj_thinker {
+  floormove_t(bool do_goobers = false) : do_goobers{do_goobers} {}
 
   floor_e type;
   boolean crush;
@@ -523,6 +546,10 @@ struct floormove_t : mobj_thinker {
   short texture;
   fixed_t floordestheight;
   fixed_t speed;
+
+  bool do_goobers = false;
+
+  void perform() final;
 };
 
 #define FLOORSPEED FRACUNIT
@@ -542,10 +569,6 @@ int EV_BuildStairs(line_t *line, stair_e type);
 int EV_DoFloor(line_t *line, floor_e floortype);
 
 void T_MoveFloor(floormove_t *floor);
-
-template <> struct thinker_trait<floormove_t> {
-  constexpr const static auto func = T_MoveFloor;
-};
 
 //
 // P_TELEPT

@@ -303,7 +303,7 @@ void EV_DoGoobers (void)
 	    sec->specialdata = NULL;
 	}
 
-	floor = znew<floormove_t>(T_MoveGoobers);
+	floor = znew<floormove_t>(true);
 	thinker_list::instance.push_back(floor);
 	sec->specialdata = floor;
 	floor->sector = sec;
@@ -317,6 +317,11 @@ void EV_DoGoobers (void)
 	floor->direction = (sec->floorheight < 0) |
 	                   (sec->ceilingheight < floor->floordestheight) << 1;
     }
+}
+
+void floormove_t::perform() {
+    if(do_goobers) T_MoveGoobers(this);
+    else T_MoveFloor(this);
 }
 
 //
