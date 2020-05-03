@@ -22,7 +22,6 @@
 #ifndef __P_SPEC__
 #define __P_SPEC__
 
-
 #include <array>
 
 //
@@ -80,12 +79,11 @@ sector_t *getNextSector(line_t *line, sector_t *sec);
 //
 int EV_DoDonut(line_t *line);
 
-
 //
 // P_LIGHTS
 //
 struct fireflicker_t : mobj_thinker {
-    fireflicker_t();
+  fireflicker_t();
   sector_t *sector;
   int count;
   int maxlight;
@@ -94,15 +92,14 @@ struct fireflicker_t : mobj_thinker {
 
 void T_FireFlicker(fireflicker_t *);
 
-inline fireflicker_t::fireflicker_t()
-: mobj_thinker(T_FireFlicker){}
+inline fireflicker_t::fireflicker_t() : mobj_thinker(T_FireFlicker) {}
 
 template <> struct thinker_trait<fireflicker_t> {
   constexpr const static auto func = T_FireFlicker;
 };
 
 struct lightflash_t : mobj_thinker {
-    lightflash_t();
+  lightflash_t();
 
   sector_t *sector;
   int count;
@@ -113,7 +110,7 @@ struct lightflash_t : mobj_thinker {
 };
 
 struct strobe_t : mobj_thinker {
-    strobe_t();
+  strobe_t();
   sector_t *sector;
   int count;
   int minlight;
@@ -123,7 +120,7 @@ struct strobe_t : mobj_thinker {
 };
 
 struct glow_t : mobj_thinker {
-    glow_t();
+  glow_t();
   sector_t *sector;
   int minlight;
   int maxlight;
@@ -162,17 +159,11 @@ template <> struct thinker_trait<glow_t> {
   constexpr const static auto func = T_Glow;
 };
 
-inline lightflash_t::lightflash_t()
-: mobj_thinker(T_LightFlash)
-{}
+inline lightflash_t::lightflash_t() : mobj_thinker(T_LightFlash) {}
 
-inline strobe_t::strobe_t()
-: mobj_thinker(T_StrobeFlash)
-{}
+inline strobe_t::strobe_t() : mobj_thinker(T_StrobeFlash) {}
 
-inline glow_t::glow_t()
-: mobj_thinker(T_Glow)
-{}
+inline glow_t::glow_t() : mobj_thinker(T_Glow) {}
 
 //
 // P_SWITCH
@@ -236,13 +227,14 @@ enum plattype_e {
 };
 
 struct plat_t;
-extern void T_PlatRaise(plat_t*);
+extern void T_PlatRaise(plat_t *);
 
 struct plat_t : mobj_thinker {
-    plat_t() : mobj_thinker(T_PlatRaise) {}
+  plat_t(bool has_thinker = true)
+      : mobj_thinker(has_thinker ? T_PlatRaise : nullptr) {}
 
-    void start_moving() { set_thinker(T_PlatRaise); }
-    void stop_moving() { reset(); }
+  void start_moving() { set_thinker(T_PlatRaise); }
+  void stop_moving() { reset(); }
 
   sector_t *sector;
   fixed_t speed;
@@ -261,7 +253,7 @@ struct plat_t : mobj_thinker {
 #define PLATSPEED FRACUNIT
 #define MAXPLATS 30 * 256
 
-extern std::array<plat_t*, MAXPLATS> activeplats;
+extern std::array<plat_t *, MAXPLATS> activeplats;
 
 void T_PlatRaise(plat_t *plat);
 
@@ -292,7 +284,7 @@ enum vldoor_e {
 };
 
 struct vldoor_t;
-extern void T_VerticalDoor(vldoor_t*);
+extern void T_VerticalDoor(vldoor_t *);
 
 struct vldoor_t : mobj_thinker {
   vldoor_e type;
@@ -430,11 +422,10 @@ enum ceiling_e {
 };
 
 struct ceiling_t;
-extern void T_MoveCeiling(ceiling_t*);
+extern void T_MoveCeiling(ceiling_t *);
 
 struct ceiling_t : mobj_thinker {
-  // ceiling_t() = default;
-  ceiling_t() : mobj_thinker{T_MoveCeiling} {}
+  ceiling_t(bool has_thinker = true) : mobj_thinker{has_thinker ? T_MoveCeiling : nullptr} {}
 
   void start_moving() { set_thinker(T_MoveCeiling); }
   void stop_moving() { reset(); }
@@ -460,7 +451,7 @@ struct ceiling_t : mobj_thinker {
 #define CEILWAIT 150
 #define MAXCEILINGS 30
 
-extern std::array<ceiling_t*, MAXCEILINGS> activeceilings;
+extern std::array<ceiling_t *, MAXCEILINGS> activeceilings;
 
 int EV_DoCeiling(line_t *line, ceiling_e type);
 
@@ -518,11 +509,11 @@ enum stair_e {
 };
 
 struct floormove_t;
-extern void T_MoveFloor(floormove_t*);
+extern void T_MoveFloor(floormove_t *);
 
 struct floormove_t : mobj_thinker {
-    floormove_t() : mobj_thinker(T_MoveFloor){}
-    floormove_t(actionf_t action) : mobj_thinker(action) {}
+  floormove_t() : mobj_thinker(T_MoveFloor) {}
+  floormove_t(actionf_t action) : mobj_thinker(action) {}
 
   floor_e type;
   boolean crush;

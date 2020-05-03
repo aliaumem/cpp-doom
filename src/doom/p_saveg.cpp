@@ -16,9 +16,9 @@
 //	Archiving: SaveGame I/O.
 //
 
+#include <cassert>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cassert>
 
 #include "deh_main.hpp"
 #include "dstrings.hpp"
@@ -167,13 +167,34 @@ static void *saveg_readp(void) {
 }
 
 static void saveg_writep(const void *p) {
-    saveg_write32((intptr_t)p);
+  saveg_write32(reinterpret_cast<intptr_t>(p));
 }
 
 // Enum values are 32-bit integers.
 
 #define saveg_read_enum saveg_read32
 #define saveg_write_enum saveg_write32
+
+template <typename Enum, typename Enabled = std::enable_if_t<std::is_enum_v<Enum>>>
+Enum savegame_read() {
+  return static_cast<Enum>(saveg_read32());
+}
+template <typename Enum, typename Enabled = std::enable_if_t<std::is_enum_v<Enum>>>
+void savegame_write(Enum value) {
+  saveg_write32(
+      static_cast<int>(static_cast<std::underlying_type_t<Enum>>(value)));
+}
+
+void savegame_write(sector_t* sector)
+{
+    saveg_write32(sector - sectors);
+}
+
+sector_t* savegame_read_sector()
+{
+    return &sectors[saveg_read32()];
+}
+
 
 //
 // Structure read/write functions
@@ -218,16 +239,6 @@ static void saveg_write_mapthing_t(mapthing_t *str) {
 }
 
 //
-// actionf_t
-//
-
-static void saveg_read_actionf_t(actionf_t *str) { *str = saveg_readp(); }
-
-static void saveg_write_actionf_t(actionf_t *str) {
-  saveg_writep(str->as_ptr());
-}
-
-//
 // think_t
 //
 // This is just an actionf_t.
@@ -239,147 +250,140 @@ static void saveg_write_actionf_t(actionf_t *str) {
 //
 // thinker_t
 //
-static void saveg_read_thinker_t(thinker_t *str) {
-  str->prev = reinterpret_cast<thinker_t *>(saveg_readp());
-  str->next = reinterpret_cast<thinker_t *>(saveg_readp());
-  saveg_read_think_t(&str->function);
+static bool savegame_read_thinker_space() {
+  saveg_read32();
+  saveg_read32();
+  return saveg_read32() != 0;
 }
 
-static void saveg_write_thinker_t(thinker_t *str) {
-  saveg_writep(str->prev);
-  saveg_writep(str->next);
-  saveg_write_think_t(&str->function);
+static void savegame_write_thinker_space(bool has_thinker) {
+  saveg_write32(0);
+  saveg_write32(0);
+  saveg_write32(static_cast<int>(has_thinker));
 }
-
-static void saveg_read_mobj_thinker(mobj_thinker* thinker)
-{
-    saveg_read_thinker_t(&thinker->thinker);
-}
-
-static void saveg_write_mobj_thinker(mobj_thinker* thinker)
-{
-    saveg_write_thinker_t(&thinker->thinker);
-}
-
 
 //
 // mobj_t
 //
 
-static void saveg_read_mobj_t(mobj_t *str) {
+static mobj_t *saveg_read_mobj_t() {
   int pl;
 
+  auto *mobj = znew<mobj_t>();
+
   // thinker_t thinker;
-  saveg_read_mobj_thinker(str);
+  savegame_read_thinker_space();
 
   // fixed_t x;
-  str->x = saveg_read32();
+  mobj->x = saveg_read32();
 
   // fixed_t y;
-  str->y = saveg_read32();
+  mobj->y = saveg_read32();
 
   // fixed_t z;
-  str->z = saveg_read32();
+  mobj->z = saveg_read32();
 
   // struct mobj_s* snext;
-  str->snext = static_cast<mobj_t *>(saveg_readp());
+  mobj->snext = static_cast<mobj_t *>(saveg_readp());
 
-  str->sprev = static_cast<mobj_t *>(saveg_readp());
+  mobj->sprev = static_cast<mobj_t *>(saveg_readp());
 
   // angle_t angle;
-  str->angle = saveg_read32();
+  mobj->angle = saveg_read32();
 
   // spritenum_t sprite;
-  str->sprite = static_cast<spritenum_t>(saveg_read_enum());
+  mobj->sprite = savegame_read<spritenum_t>();
 
   // int frame;
-  str->frame = saveg_read32();
+  mobj->frame = saveg_read32();
 
   // struct mobj_s* bnext;
-  str->bnext = static_cast<mobj_t *>(saveg_readp());
+  mobj->bnext = static_cast<mobj_t *>(saveg_readp());
 
   // struct mobj_s* bprev;
-  str->bprev = static_cast<mobj_t *>(saveg_readp());
+  mobj->bprev = static_cast<mobj_t *>(saveg_readp());
 
   // struct subsector_s* subsector;
-  str->subsector = static_cast<subsector_t *>(saveg_readp());
+  mobj->subsector = static_cast<subsector_t *>(saveg_readp());
 
   // fixed_t floorz;
-  str->floorz = saveg_read32();
+  mobj->floorz = saveg_read32();
 
   // fixed_t ceilingz;
-  str->ceilingz = saveg_read32();
+  mobj->ceilingz = saveg_read32();
 
   // fixed_t radius;
-  str->radius = saveg_read32();
+  mobj->radius = saveg_read32();
 
   // fixed_t height;
-  str->height = saveg_read32();
+  mobj->height = saveg_read32();
 
   // fixed_t momx;
-  str->momx = saveg_read32();
+  mobj->momx = saveg_read32();
 
   // fixed_t momy;
-  str->momy = saveg_read32();
+  mobj->momy = saveg_read32();
 
   // fixed_t momz;
-  str->momz = saveg_read32();
+  mobj->momz = saveg_read32();
 
   // int validcount;
-  str->validcount = saveg_read32();
+  mobj->validcount = saveg_read32();
 
   // mobjtype_t type;
-  str->type = static_cast<mobjtype_t>(saveg_read_enum());
+  mobj->type = savegame_read<mobjtype_t>();
 
   // mobjinfo_t* info;
-  str->info = static_cast<mobjinfo_t *>(saveg_readp());
+  mobj->info = static_cast<mobjinfo_t *>(saveg_readp());
 
   // int tics;
-  str->tics = saveg_read32();
+  mobj->tics = saveg_read32();
 
   // state_t* state;
-  str->state = &states[saveg_read32()];
+  mobj->state = &states[saveg_read32()];
 
   // int flags;
-  str->flags = saveg_read32();
+  mobj->flags = saveg_read32();
 
   // int health;
-  str->health = saveg_read32();
+  mobj->health = saveg_read32();
 
   // int movedir;
-  str->movedir = saveg_read32();
+  mobj->movedir = saveg_read32();
 
   // int movecount;
-  str->movecount = saveg_read32();
+  mobj->movecount = saveg_read32();
 
   // struct mobj_s* target;
-  str->target = static_cast<mobj_t *>(saveg_readp());
+  mobj->target = static_cast<mobj_t *>(saveg_readp());
 
   // int reactiontime;
-  str->reactiontime = saveg_read32();
+  mobj->reactiontime = saveg_read32();
 
   // int threshold;
-  str->threshold = saveg_read32();
+  mobj->threshold = saveg_read32();
 
   // struct player_s* player;
   pl = saveg_read32();
 
   if (pl > 0) {
-    str->player = &players[pl - 1];
-    str->player->mo = str;
-    str->player->so = Crispy_PlayerSO(pl - 1); // [crispy] weapon sound sources
+    mobj->player = &players[pl - 1];
+    mobj->player->mo = mobj;
+    mobj->player->so = Crispy_PlayerSO(pl - 1); // [crispy] weapon sound sources
   } else {
-    str->player = NULL;
+    mobj->player = NULL;
   }
 
   // int lastlook;
-  str->lastlook = saveg_read32();
+  mobj->lastlook = saveg_read32();
 
   // mapthing_t spawnpoint;
-  saveg_read_mapthing_t(&str->spawnpoint);
+  saveg_read_mapthing_t(&mobj->spawnpoint);
 
   // struct mobj_s* tracer;
-  str->tracer = static_cast<mobj_t *>(saveg_readp());
+  mobj->tracer = static_cast<mobj_t *>(saveg_readp());
+
+  return mobj;
 }
 
 uint32_t P_ThinkerToIndex(thinker_t *thinker) {
@@ -434,100 +438,39 @@ constexpr thinker_t *thinker_list::mobj_at(uintptr_t index) {
 }
 
 static void saveg_write_mobj_t(mobj_t *str) {
-  // thinker_t thinker;
-  saveg_write_mobj_thinker(str);
-
-  // fixed_t x;
+  savegame_write_thinker_space(true);
   saveg_write32(str->x);
-
-  // fixed_t y;
   saveg_write32(str->y);
-
-  // fixed_t z;
   saveg_write32(str->z);
-
-  // struct mobj_s* snext;
   saveg_writep(str->snext);
-
-  // struct mobj_s* sprev;
   saveg_writep(str->sprev);
-
-  // angle_t angle;
   saveg_write32(str->angle);
-
-  // spritenum_t sprite;
-  saveg_write_enum(str->sprite);
-
-  // int frame;
+  savegame_write(str->sprite);
   saveg_write32(str->frame);
-
-  // struct mobj_s* bnext;
   saveg_writep(str->bnext);
-
-  // struct mobj_s* bprev;
   saveg_writep(str->bprev);
-
-  // struct subsector_s* subsector;
   saveg_writep(str->subsector);
-
-  // fixed_t floorz;
   saveg_write32(str->floorz);
-
-  // fixed_t ceilingz;
   saveg_write32(str->ceilingz);
-
-  // fixed_t radius;
   saveg_write32(str->radius);
-
-  // fixed_t height;
   saveg_write32(str->height);
-
-  // fixed_t momx;
   saveg_write32(str->momx);
-
-  // fixed_t momy;
   saveg_write32(str->momy);
-
-  // fixed_t momz;
   saveg_write32(str->momz);
-
-  // int validcount;
   saveg_write32(str->validcount);
-
-  // mobjtype_t type;
-  saveg_write_enum(str->type);
-
-  // mobjinfo_t* info;
+  savegame_write(str->type);
   saveg_writep(str->info);
-
-  // int tics;
   saveg_write32(str->tics);
-
-  // state_t* state;
   saveg_write32(str->state - states);
-
-  // int flags;
   saveg_write32(str->flags);
-
-  // int health;
   saveg_write32(str->health);
-
-  // int movedir;
   saveg_write32(str->movedir);
-
-  // int movecount;
   saveg_write32(str->movecount);
-
-  // struct mobj_s* target;
   // [crispy] instead of the actual pointer, store the
   // corresponding index in the mobj->target field
   saveg_writep(reinterpret_cast<void *>(
       static_cast<uintptr_t>(P_ThinkerToIndex(str->target->thinker))));
-
-  // int reactiontime;
   saveg_write32(str->reactiontime);
-
-  // int threshold;
   saveg_write32(str->threshold);
 
   // struct player_s* player;
@@ -537,13 +480,9 @@ static void saveg_write_mobj_t(mobj_t *str) {
     saveg_write32(0);
   }
 
-  // int lastlook;
   saveg_write32(str->lastlook);
-
-  // mapthing_t spawnpoint;
   saveg_write_mapthing_t(&str->spawnpoint);
 
-  // struct mobj_s* tracer;
   // [crispy] instead of the actual pointer, store the
   // corresponding index in the mobj->tracers field
   saveg_writep(reinterpret_cast<void *>(
@@ -648,7 +587,6 @@ static void saveg_write_pspdef_t(pspdef_t *str) {
 //
 // player_t
 //
-
 static void saveg_read_player_t(player_t *str) {
   int i;
 
@@ -899,464 +837,232 @@ static void saveg_write_player_t(player_t *str) {
   saveg_write32(str->didsecret);
 }
 
+template <typename T> static T *saveg_read();
+
 //
 // ceiling_t
 //
+template <> ceiling_t *saveg_read() {
+  bool has_thinker = savegame_read_thinker_space();
+  auto *ceiling = znew<ceiling_t>(has_thinker);
 
-static void saveg_read(ceiling_t *str) {
-  int sector;
+  ceiling->type = savegame_read<ceiling_e>();
+  ceiling->sector = savegame_read_sector();
+  ceiling->bottomheight = saveg_read32();
+  ceiling->topheight = saveg_read32();
+  ceiling->speed = saveg_read32();
+  ceiling->crush = saveg_read32();
+  ceiling->direction = saveg_read32();
+  ceiling->tag = saveg_read32();
+  ceiling->olddirection = saveg_read32();
 
-  // thinker_t thinker;
-  saveg_read_mobj_thinker(str);
-
-  // ceiling_e type;
-  str->type = static_cast<ceiling_e>(saveg_read_enum());
-
-  // sector_t* sector;
-  sector = saveg_read32();
-  str->sector = &sectors[sector];
-
-  // fixed_t bottomheight;
-  str->bottomheight = saveg_read32();
-
-  // fixed_t topheight;
-  str->topheight = saveg_read32();
-
-  // fixed_t speed;
-  str->speed = saveg_read32();
-
-  // boolean crush;
-  str->crush = saveg_read32();
-
-  // int direction;
-  str->direction = saveg_read32();
-
-  // int tag;
-  str->tag = saveg_read32();
-
-  // int olddirection;
-  str->olddirection = saveg_read32();
+  return ceiling;
 }
 
 static void saveg_write(ceiling_t *str) {
-  // thinker_t thinker;
-  saveg_write_mobj_thinker(str);
-
-  // ceiling_e type;
-  saveg_write_enum(str->type);
-
-  // sector_t* sector;
-  saveg_write32(str->sector - sectors);
-
-  // fixed_t bottomheight;
+  savegame_write_thinker_space(str->has_any_action());
+  savegame_write(str->type);
+  savegame_write(str->sector);
   saveg_write32(str->bottomheight);
-
-  // fixed_t topheight;
   saveg_write32(str->topheight);
-
-  // fixed_t speed;
   saveg_write32(str->speed);
-
-  // boolean crush;
   saveg_write32(str->crush);
-
-  // int direction;
   saveg_write32(str->direction);
-
-  // int tag;
   saveg_write32(str->tag);
-
-  // int olddirection;
   saveg_write32(str->olddirection);
 }
 
 //
 // vldoor_t
 //
+template <> vldoor_t *saveg_read() {
+  savegame_read_thinker_space();
+  auto *door = znew<vldoor_t>();
+  door->type = savegame_read<vldoor_e>();
+  door->sector = savegame_read_sector();
+  door->topheight = saveg_read32();
+  door->speed = saveg_read32();
+  door->direction = saveg_read32();
+  door->topwait = saveg_read32();
+  door->topcountdown = saveg_read32();
 
-static void saveg_read(vldoor_t *str) {
-  int sector;
-
-  // thinker_t thinker;
-  saveg_read_mobj_thinker(str);
-
-  // vldoor_e type;
-  str->type = static_cast<vldoor_e>(saveg_read_enum());
-
-  // sector_t* sector;
-  sector = saveg_read32();
-  str->sector = &sectors[sector];
-
-  // fixed_t topheight;
-  str->topheight = saveg_read32();
-
-  // fixed_t speed;
-  str->speed = saveg_read32();
-
-  // int direction;
-  str->direction = saveg_read32();
-
-  // int topwait;
-  str->topwait = saveg_read32();
-
-  // int topcountdown;
-  str->topcountdown = saveg_read32();
+  return door;
 }
 
 static void saveg_write(vldoor_t *str) {
-  // thinker_t thinker;
-  saveg_write_mobj_thinker(str);
-
-  // vldoor_e type;
-  saveg_write_enum(str->type);
-
-  // sector_t* sector;
-  saveg_write32(str->sector - sectors);
-
-  // fixed_t topheight;
+  savegame_write_thinker_space(true);
+  savegame_write(str->type);
+  savegame_write(str->sector);
   saveg_write32(str->topheight);
-
-  // fixed_t speed;
   saveg_write32(str->speed);
-
-  // int direction;
   saveg_write32(str->direction);
-
-  // int topwait;
   saveg_write32(str->topwait);
-
-  // int topcountdown;
   saveg_write32(str->topcountdown);
 }
 
 //
 // floormove_t
 //
+template <> floormove_t *saveg_read() {
+  savegame_read_thinker_space();
+  auto *floor = znew<floormove_t>();
+  floor->type = savegame_read<floor_e>();
+  floor->crush = saveg_read32();
+  floor->sector = savegame_read_sector();
+  floor->direction = saveg_read32();
+  floor->newspecial = saveg_read32();
+  floor->texture = saveg_read16();
+  floor->floordestheight = saveg_read32();
+  floor->speed = saveg_read32();
 
-static void saveg_read(floormove_t *str) {
-  int sector;
-
-  // thinker_t thinker;
-  saveg_read_mobj_thinker(str);
-
-  // floor_e type;
-  str->type = static_cast<floor_e>(saveg_read_enum());
-
-  // boolean crush;
-  str->crush = saveg_read32();
-
-  // sector_t* sector;
-  sector = saveg_read32();
-  str->sector = &sectors[sector];
-
-  // int direction;
-  str->direction = saveg_read32();
-
-  // int newspecial;
-  str->newspecial = saveg_read32();
-
-  // short texture;
-  str->texture = saveg_read16();
-
-  // fixed_t floordestheight;
-  str->floordestheight = saveg_read32();
-
-  // fixed_t speed;
-  str->speed = saveg_read32();
+  return floor;
 }
 
 static void saveg_write(floormove_t *str) {
-  // thinker_t thinker;
-  saveg_write_mobj_thinker(str);
-
-  // floor_e type;
-  saveg_write_enum(str->type);
-
-  // boolean crush;
+  savegame_write_thinker_space(true);
+  savegame_write(str->type);
   saveg_write32(str->crush);
-
-  // sector_t* sector;
-  saveg_write32(str->sector - sectors);
-
-  // int direction;
+  savegame_write(str->sector);
   saveg_write32(str->direction);
-
-  // int newspecial;
   saveg_write32(str->newspecial);
-
-  // short texture;
   saveg_write16(str->texture);
-
-  // fixed_t floordestheight;
   saveg_write32(str->floordestheight);
-
-  // fixed_t speed;
   saveg_write32(str->speed);
 }
 
 //
 // plat_t
 //
+template <> plat_t *saveg_read() {
+  bool has_thinker = savegame_read_thinker_space();
+  auto *platform = znew<plat_t>(has_thinker);
+  platform->sector = savegame_read_sector();
+  platform->speed = saveg_read32();
+  platform->low = saveg_read32();
+  platform->high = saveg_read32();
+  platform->wait = saveg_read32();
+  platform->count = saveg_read32();
+  platform->status = savegame_read<plat_e>();
+  platform->oldstatus = savegame_read<plat_e>();
+  platform->crush = saveg_read32();
+  platform->tag = saveg_read32();
+  platform->type = savegame_read<plattype_e>();
 
-static void saveg_read(plat_t *str) {
-  int sector;
-
-  // thinker_t thinker;
-  saveg_read_mobj_thinker(str);
-
-  // sector_t* sector;
-  sector = saveg_read32();
-  str->sector = &sectors[sector];
-
-  // fixed_t speed;
-  str->speed = saveg_read32();
-
-  // fixed_t low;
-  str->low = saveg_read32();
-
-  // fixed_t high;
-  str->high = saveg_read32();
-
-  // int wait;
-  str->wait = saveg_read32();
-
-  // int count;
-  str->count = saveg_read32();
-
-  // plat_e status;
-  str->status = static_cast<plat_e>(saveg_read_enum());
-
-  // plat_e oldstatus;
-  str->oldstatus = static_cast<plat_e>(saveg_read_enum());
-
-  // boolean crush;
-  str->crush = saveg_read32();
-
-  // int tag;
-  str->tag = saveg_read32();
-
-  // plattype_e type;
-  str->type = static_cast<plattype_e>(saveg_read_enum());
+  return platform;
 }
 
 static void saveg_write(plat_t *str) {
-  // thinker_t thinker;
-  saveg_write_mobj_thinker(str);
-
-  // sector_t* sector;
-  saveg_write32(str->sector - sectors);
-
-  // fixed_t speed;
+  savegame_write_thinker_space(str->has_any_action());
+  savegame_write(str->sector);
   saveg_write32(str->speed);
-
-  // fixed_t low;
   saveg_write32(str->low);
-
-  // fixed_t high;
   saveg_write32(str->high);
-
-  // int wait;
   saveg_write32(str->wait);
-
-  // int count;
   saveg_write32(str->count);
-
-  // plat_e status;
-  saveg_write_enum(str->status);
-
-  // plat_e oldstatus;
-  saveg_write_enum(str->oldstatus);
-
-  // boolean crush;
+  savegame_write(str->status);
+  savegame_write(str->oldstatus);
   saveg_write32(str->crush);
-
-  // int tag;
   saveg_write32(str->tag);
-
-  // plattype_e type;
-  saveg_write_enum(str->type);
+  savegame_write(str->type);
 }
 
 //
 // lightflash_t
 //
+template <> lightflash_t *saveg_read() {
+  savegame_read_thinker_space();
+  auto *flash = znew<lightflash_t>();
+  flash->sector = savegame_read_sector();
+  flash->count = saveg_read32();
+  flash->maxlight = saveg_read32();
+  flash->minlight = saveg_read32();
+  flash->maxtime = saveg_read32();
+  flash->mintime = saveg_read32();
 
-static void saveg_read(lightflash_t *str) {
-  int sector;
-
-  // thinker_t thinker;
-  saveg_read_mobj_thinker(str);
-
-  // sector_t* sector;
-  sector = saveg_read32();
-  str->sector = &sectors[sector];
-
-  // int count;
-  str->count = saveg_read32();
-
-  // int maxlight;
-  str->maxlight = saveg_read32();
-
-  // int minlight;
-  str->minlight = saveg_read32();
-
-  // int maxtime;
-  str->maxtime = saveg_read32();
-
-  // int mintime;
-  str->mintime = saveg_read32();
+  return flash;
 }
 
 static void saveg_write(lightflash_t *str) {
-  // thinker_t thinker;
-  saveg_write_mobj_thinker(str);
-
-  // sector_t* sector;
-  saveg_write32(str->sector - sectors);
-
-  // int count;
+  savegame_write_thinker_space(true);
+  savegame_write(str->sector);
   saveg_write32(str->count);
-
-  // int maxlight;
   saveg_write32(str->maxlight);
-
-  // int minlight;
   saveg_write32(str->minlight);
-
-  // int maxtime;
   saveg_write32(str->maxtime);
-
-  // int mintime;
   saveg_write32(str->mintime);
 }
 
 //
 // strobe_t
 //
+template <> strobe_t *saveg_read() {
+  savegame_read_thinker_space();
+  auto *strobe = znew<strobe_t>();
+  strobe->sector = savegame_read_sector();
+  strobe->count = saveg_read32();
+  strobe->minlight = saveg_read32();
+  strobe->maxlight = saveg_read32();
+  strobe->darktime = saveg_read32();
+  strobe->brighttime = saveg_read32();
 
-static void saveg_read(strobe_t *str) {
-  int sector;
-
-  // thinker_t thinker;
-  saveg_read_mobj_thinker(str);
-
-  // sector_t* sector;
-  sector = saveg_read32();
-  str->sector = &sectors[sector];
-
-  // int count;
-  str->count = saveg_read32();
-
-  // int minlight;
-  str->minlight = saveg_read32();
-
-  // int maxlight;
-  str->maxlight = saveg_read32();
-
-  // int darktime;
-  str->darktime = saveg_read32();
-
-  // int brighttime;
-  str->brighttime = saveg_read32();
+  return strobe;
 }
 
 static void saveg_write(strobe_t *str) {
-  // thinker_t thinker;
-  saveg_write_mobj_thinker(str);
-
-  // sector_t* sector;
-  saveg_write32(str->sector - sectors);
-
-  // int count;
+  savegame_write_thinker_space(true);
+  savegame_write(str->sector);
   saveg_write32(str->count);
-
-  // int minlight;
   saveg_write32(str->minlight);
-
-  // int maxlight;
   saveg_write32(str->maxlight);
-
-  // int darktime;
   saveg_write32(str->darktime);
-
-  // int brighttime;
   saveg_write32(str->brighttime);
 }
 
 //
 // glow_t
 //
+template <> glow_t *saveg_read() {
+  savegame_read_thinker_space();
+  auto *glow = znew<glow_t>();
+  glow->sector = savegame_read_sector();
+  glow->minlight = saveg_read32();
+  glow->maxlight = saveg_read32();
+  glow->direction = saveg_read32();
 
-static void saveg_read(glow_t *str) {
-  int sector;
-
-  // thinker_t thinker;
-  saveg_read_mobj_thinker(str);
-
-  // sector_t* sector;
-  sector = saveg_read32();
-  str->sector = &sectors[sector];
-
-  // int minlight;
-  str->minlight = saveg_read32();
-
-  // int maxlight;
-  str->maxlight = saveg_read32();
-
-  // int direction;
-  str->direction = saveg_read32();
+  return glow;
 }
 
 static void saveg_write(glow_t *str) {
-  // thinker_t thinker;
-  saveg_write_mobj_thinker(str);
-
-  // sector_t* sector;
-  saveg_write32(str->sector - sectors);
-
-  // int minlight;
+  savegame_write_thinker_space(false);
+  savegame_write(str->sector);
   saveg_write32(str->minlight);
-
-  // int maxlight;
   saveg_write32(str->maxlight);
-
-  // int direction;
   saveg_write32(str->direction);
 }
 
-
-template <typename T>
-static void saveg_read_special()
-{
-    saveg_read_pad();
-    auto *special = znew<T>();
-    saveg_read(special);
-    special->sector->specialdata = special;
-    thinker_list::instance.push_back(special);
+template <typename T> static void saveg_read_special() {
+  saveg_read_pad();
+  auto *special = saveg_read<T>();
+  special->sector->specialdata = special;
+  thinker_list::instance.push_back(special);
 }
 
-template <typename T>
-static void saveg_read_light()
-{
-    saveg_read_pad();
-    auto *special = znew<T>();
-    saveg_read(special);
-    thinker_list::instance.push_back(special);
+template <typename T> static void saveg_read_light() {
+  saveg_read_pad();
+  auto *special = saveg_read<T>();
+  thinker_list::instance.push_back(special);
 }
 
-template <typename T>
-static T* saveg_read_special_movable()
-{
-    saveg_read_pad();
-    auto *special = znew<T>();
-    saveg_read(special);
-    special->sector->specialdata = special;
+template <typename T> static T *saveg_read_special_movable() {
+  saveg_read_pad();
+  auto *special = saveg_read<T>();
+  special->sector->specialdata = special;
 
-    if (!special->has_any_action())
-        special->stop_moving();
+  if (!special->has_any_action())
+    special->stop_moving();
 
-    thinker_list::instance.push_back(special);
-    return special;
+  thinker_list::instance.push_back(special);
+  return special;
 }
 
 //
@@ -1585,6 +1291,8 @@ enum thinkerclass_t {
 
 };
 
+
+
 //
 // P_ArchiveThinkers
 //
@@ -1612,7 +1320,7 @@ void P_ArchiveThinkers(void) {
 void P_UnArchiveThinkers(void) {
   byte tclass;
 
-    // remove all the current thinkers
+  // remove all the current thinkers
   for (auto *currentthinker : thinker_list::instance) {
     if (auto *mo = thinker_cast<mobj_t>(currentthinker); mo)
       P_RemoveMobj(mo);
@@ -1630,9 +1338,7 @@ void P_UnArchiveThinkers(void) {
 
     case tc_mobj: {
       saveg_read_pad();
-      auto* mobj = zmalloc_one<mobj_t>(PU_LEVSPEC);
-      saveg_read_mobj_t(mobj);
-      new (mobj) mobj_t();
+      auto *mobj = saveg_read_mobj_t();
 
       // [crispy] restore mobj->target and mobj->tracer fields
       // mobj->target = NULL;
@@ -1688,20 +1394,18 @@ enum specials_e {
   tc_endspecials
 };
 
-specials_e specialstype(ceiling_t*) { return tc_ceiling; }
-specials_e specialstype(vldoor_t*) { return tc_door; }
-specials_e specialstype(floormove_t*) { return tc_floor; }
-specials_e specialstype(plat_t*) { return tc_plat; }
-specials_e specialstype(lightflash_t*) { return tc_flash; }
-specials_e specialstype(strobe_t*) { return tc_strobe; }
-specials_e specialstype(glow_t*) { return tc_glow; }
+specials_e specialstype(ceiling_t *) { return tc_ceiling; }
+specials_e specialstype(vldoor_t *) { return tc_door; }
+specials_e specialstype(floormove_t *) { return tc_floor; }
+specials_e specialstype(plat_t *) { return tc_plat; }
+specials_e specialstype(lightflash_t *) { return tc_flash; }
+specials_e specialstype(strobe_t *) { return tc_strobe; }
+specials_e specialstype(glow_t *) { return tc_glow; }
 
-template <typename T>
-void saveg_write_special(T* special)
-{
-    saveg_write8(specialstype(special));
-    saveg_write_pad();
-    saveg_write(special);
+template <typename T> void saveg_write_special(T *special) {
+  saveg_write8(specialstype(special));
+  saveg_write_pad();
+  saveg_write(special);
 }
 
 //
@@ -1719,26 +1423,30 @@ void P_ArchiveSpecials(void) {
   // save off the current thinkers
   for (auto *th : thinker_list::instance) {
     if (!th->has_any()) {
-        auto ceilIt = std::find(activeceilings.begin(), activeceilings.end(), reinterpret_cast<ceiling_t*>(th));
-        if (ceilIt != activeceilings.end()) saveg_write_special(*ceilIt);
+      auto ceilIt = std::find(activeceilings.begin(), activeceilings.end(),
+                              reinterpret_cast<ceiling_t *>(th));
+      if (ceilIt != activeceilings.end())
+        saveg_write_special(*ceilIt);
 
       // [crispy] save plats in statis
-      auto platIt = std::find(std::begin(activeplats), std::end(activeplats), reinterpret_cast<plat_t*>(th));
-        if(platIt != std::end(activeplats)) saveg_write_special(reinterpret_cast<plat_t*>(th));
+      auto platIt = std::find(std::begin(activeplats), std::end(activeplats),
+                              reinterpret_cast<plat_t *>(th));
+      if (platIt != std::end(activeplats))
+        saveg_write_special(reinterpret_cast<plat_t *>(th));
     } else if (auto *ceiling = thinker_cast<ceiling_t>(th); ceiling) {
       saveg_write_special(ceiling);
     } else if (auto *door = thinker_cast<vldoor_t>(th); door) {
       saveg_write_special(door);
     } else if (auto *floor = thinker_cast<floormove_t>(th); floor) {
-        saveg_write_special(floor);
+      saveg_write_special(floor);
     } else if (auto *plat = thinker_cast<plat_t>(th); plat) {
-        saveg_write_special(plat);
+      saveg_write_special(plat);
     } else if (auto *flash = thinker_cast<lightflash_t>(th); flash) {
-        saveg_write_special(flash);
+      saveg_write_special(flash);
     } else if (auto *strobe = thinker_cast<strobe_t>(th); strobe) {
-        saveg_write_special(strobe);
+      saveg_write_special(strobe);
     } else if (auto *glow = thinker_cast<glow_t>(th); glow) {
-        saveg_write_special(glow);
+      saveg_write_special(glow);
     }
   }
 
@@ -1752,7 +1460,7 @@ void P_ArchiveSpecials(void) {
 void P_UnArchiveSpecials(void) {
   byte tclass;
 
-    // read in saved thinkers
+  // read in saved thinkers
   while (1) {
     tclass = saveg_read8();
 
@@ -1777,7 +1485,7 @@ void P_UnArchiveSpecials(void) {
     }
 
     case tc_plat: {
-      auto* plat = saveg_read_special_movable<plat_t>();
+      auto *plat = saveg_read_special_movable<plat_t>();
       P_AddActivePlat(plat);
       break;
     }
