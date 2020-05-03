@@ -190,7 +190,7 @@ static void P_ReadSoundTarget (const char *key)
 	           &target) == 3 &&
 	    !strncmp(string, key, MAX_STRING_LEN))
 	{
-		sectors[sector].soundtarget = (mobj_t *) P_IndexToThinker(target);
+		sectors[sector].soundtarget = thinker_list::instance.mobj_at(target);
 	}
 }
 

@@ -1520,7 +1520,7 @@ A_PainShootSkull
 
     // count total number of skull currently on the level
     int count = std::count_if(thinker_list::instance.begin(), thinker_list::instance.end(),
-            [](thinker_t* currentthinker)
+            [](auto* currentthinker)
     {
         auto* mo = thinker_cast<mobj_t>(currentthinker);
         return mo && mo->type == MT_SKULL;
@@ -1891,7 +1891,7 @@ void A_BrainAwake (mobj_t* mo)
     braintargeton = 0;
 	
 
-    for (thinker_t* thinker : thinker_list::instance)
+    for (auto* thinker : thinker_list::instance)
     {
         auto*const m = thinker_cast<mobj_t>(thinker);
 	if (!m)

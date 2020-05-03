@@ -233,8 +233,8 @@ struct plat_t : mobj_thinker {
   plat_t(bool has_thinker = true)
       : mobj_thinker(has_thinker ? T_PlatRaise : nullptr) {}
 
-  void start_moving() { set_thinker(T_PlatRaise); }
-  void stop_moving() { reset(); }
+  void start_moving() { enable<plat_t>(); }
+  void stop_moving() { disable(); }
 
   sector_t *sector;
   fixed_t speed;
@@ -427,8 +427,8 @@ extern void T_MoveCeiling(ceiling_t *);
 struct ceiling_t : mobj_thinker {
   ceiling_t(bool has_thinker = true) : mobj_thinker{has_thinker ? T_MoveCeiling : nullptr} {}
 
-  void start_moving() { set_thinker(T_MoveCeiling); }
-  void stop_moving() { reset(); }
+  void start_moving() { enable<ceiling_t>(); }
+  void stop_moving() { disable(); }
 
   ceiling_e type;
   sector_t *sector;

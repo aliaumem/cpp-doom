@@ -507,7 +507,7 @@ static int ST_cheat_massacre()
     extern int numbraintargets;
     extern void A_PainDie(mobj_t *);
 
-    for(thinker_t* th : thinker_list::instance)
+    for(auto* th : thinker_list::instance)
     {
 	if (auto*const mo = thinker_cast<mobj_t>(th); mo)
 	{
@@ -950,7 +950,7 @@ ST_Responder (event_t* ev)
 	if (plyr->cheats & CF_NOTARGET)
 	{
 		// [crispy] let mobjs forget their target and tracer
-        for(thinker_t* th : thinker_list::instance)
+        for(auto* th : thinker_list::instance)
 		{
 			if (mobj_t*const mo = thinker_cast<mobj_t>(th); mo)
 			{

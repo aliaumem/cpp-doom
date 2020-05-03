@@ -17,15 +17,13 @@
 //	Thinker, Ticker.
 //
 
-
-#include "z_zone.hpp"
 #include "p_local.hpp"
 #include "s_musinfo.hpp" // [crispy] T_MAPMusic()
+#include "z_zone.hpp"
 
 #include "doomstat.hpp"
 
-
-int	leveltime;
+int leveltime;
 
 //
 // THINKERS
@@ -35,72 +33,57 @@ int	leveltime;
 // but the first element must be thinker_t.
 //
 
-
-//
-// P_AllocateThinker
-// Allocates memory and adds a new thinker at the end of the list.
-//
-void P_AllocateThinker (thinker_t*	thinker)
-{
-}
-
-
-
 //
 // P_RunThinkers
 //
-void P_RunThinkers (void)
-{
-    thinker_list::instance.run();
+void P_RunThinkers(void) {
+  thinker_list::instance.run();
 
-    // [crispy] support MUSINFO lump (dynamic music changing)
-    T_MusInfo();
+  // [crispy] support MUSINFO lump (dynamic music changing)
+  T_MusInfo();
 }
 
-void thinker_list::run()
-{
-    for(auto* currentthinker : *this)
-    {
-        if (currentthinker->needs_removal())
-        {
-            remove(currentthinker);
-            Z_Free(currentthinker);
-        }
-        else
-            currentthinker->function.call_if(currentthinker);
-    }
+void thinker_list::run() {
+  clear_removed();
+
+  for (auto *currentthinker : thinkers) {
+    currentthinker->thinker.function.call_if(currentthinker);
+  }
+}
+
+void thinker_list::clear_removed() {
+  auto removedIt = std::stable_partition(
+      thinkers.begin(), thinkers.end(),
+      [](auto *thinker) { return !thinker->needs_removal(); });
+  std::for_each(removedIt, thinkers.end(), Z_Free);
+  thinkers.erase(removedIt, thinkers.end());
 }
 
 //
 // P_Ticker
 //
 
-void P_Ticker (void)
-{
-    int		i;
-    
-    // run the tic
-    if (paused)
-	return;
-		
-    // pause if in menu and at least one tic has been run
-    if ( !netgame
-	 && menuactive
-	 && !demoplayback
-	 && players[consoleplayer].viewz != 1)
-    {
-	return;
-    }
-    
-		
-    for (i=0 ; i<MAXPLAYERS ; i++)
-	if (playeringame[i])
-	    P_PlayerThink (&players[i]);
-			
-    P_RunThinkers ();
-    P_UpdateSpecials ();
-    P_RespawnSpecials ();
+void P_Ticker(void) {
+  int i;
 
-    // for par times
-    leveltime++;	
+  // run the tic
+  if (paused)
+    return;
+
+  // pause if in menu and at least one tic has been run
+  if (!netgame && menuactive && !demoplayback &&
+      players[consoleplayer].viewz != 1) {
+    return;
+  }
+
+  for (i = 0; i < MAXPLAYERS; i++)
+    if (playeringame[i])
+      P_PlayerThink(&players[i]);
+
+  P_RunThinkers();
+  P_UpdateSpecials();
+  P_RespawnSpecials();
+
+  // for par times
+  leveltime++;
 }

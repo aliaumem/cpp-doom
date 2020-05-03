@@ -1447,7 +1447,7 @@ void R_PrecacheLevel (void)
     spritepresent = zmalloc<decltype(spritepresent)>(numsprites, PU_STATIC, NULL);
     memset (spritepresent,0, numsprites);
 
-    for(thinker_t* th : thinker_list::instance)
+    for(auto* th : thinker_list::instance)
     {
 	if (auto*const mo = thinker_cast<mobj_t>(th); mo)
 	    spritepresent[mo->sprite] = 1;

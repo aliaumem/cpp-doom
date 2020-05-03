@@ -386,24 +386,17 @@ static mobj_t *saveg_read_mobj_t() {
   return mobj;
 }
 
-uint32_t P_ThinkerToIndex(thinker_t *thinker) {
-  return thinker_list::instance.index_of(thinker);
-}
-
 // [crispy] enumerate all thinker pointers
-uint32_t P_ThinkerToIndex(thinker_t &thinker) {
-  return thinker_list::instance.index_of(&thinker);
-}
-
-constexpr uint32_t thinker_list::index_of(thinker_t *thinker) {
-  if (!thinker)
-    return 0;
+uint32_t thinker_list::index_of(mobj_t *mobj) {
+    if(!mobj)
+       return 0;
+    assert(is_a<mobj_t>(mobj));
 
   uint32_t i = 0;
-  for (thinker_t *th : *this) {
-    if (thinker_cast<mobj_t>(th)) {
+  for (auto *th : *this) {
+    if (auto* mt = thinker_cast<mobj_t>(th); mt) {
       ++i;
-      if (th == thinker)
+      if (mt == mobj)
         return i;
     }
   }
@@ -412,28 +405,20 @@ constexpr uint32_t thinker_list::index_of(thinker_t *thinker) {
 }
 
 // [crispy] replace indizes with corresponding pointers
-thinker_t *P_IndexToThinker(uint32_t index) {
-  thinker_t *thinker = thinker_list::instance.mobj_at(index);
-
-  if (!thinker)
-    restoretargets_fail++;
-
-  return thinker;
-}
-
-constexpr thinker_t *thinker_list::mobj_at(uintptr_t index) {
+mobj_t *thinker_list::mobj_at(uintptr_t index) {
   if (!index)
     return nullptr;
 
   uint32_t i = 0;
   for (auto *th : *this) {
-    if (thinker_cast<mobj_t>(th)) {
+    if (auto* mobj = thinker_cast<mobj_t>(th); mobj) {
       ++i;
       if (i == index)
-        return th;
+        return mobj;
     }
   }
 
+  restoretargets_fail++;
   return nullptr;
 }
 
@@ -468,8 +453,7 @@ static void saveg_write_mobj_t(mobj_t *str) {
   saveg_write32(str->movecount);
   // [crispy] instead of the actual pointer, store the
   // corresponding index in the mobj->target field
-  saveg_writep(reinterpret_cast<void *>(
-      static_cast<uintptr_t>(P_ThinkerToIndex(str->target->thinker))));
+  saveg_write32(thinker_list::instance.index_of(str->target));
   saveg_write32(str->reactiontime);
   saveg_write32(str->threshold);
 
@@ -485,8 +469,7 @@ static void saveg_write_mobj_t(mobj_t *str) {
 
   // [crispy] instead of the actual pointer, store the
   // corresponding index in the mobj->tracers field
-  saveg_writep(reinterpret_cast<void *>(
-      static_cast<uintptr_t>(P_ThinkerToIndex(str->tracer->thinker))));
+  saveg_write32(thinker_list::instance.index_of(str->tracer));
 }
 
 //
@@ -1327,7 +1310,7 @@ void P_UnArchiveThinkers(void) {
     else
       Z_Free(currentthinker);
   }
-  thinker_list::instance.init();
+  thinker_list::instance = {};
 
   // read in saved thinkers
   while (1) {
@@ -1366,16 +1349,14 @@ void P_UnArchiveThinkers(void) {
 void P_RestoreTargets(void) {
   for (auto *th : thinker_list::instance) {
     if (auto *mo = thinker_cast<mobj_t>(th); mo) {
-      mo->target =
-          (mobj_t *)P_IndexToThinker(reinterpret_cast<uintptr_t>(mo->target));
-      mo->tracer =
-          (mobj_t *)P_IndexToThinker(reinterpret_cast<uintptr_t>(mo->tracer));
+      mo->target = thinker_list::instance.mobj_at(reinterpret_cast<uintptr_t>(mo->target));
+      mo->tracer = thinker_list::instance.mobj_at(reinterpret_cast<uintptr_t>(mo->tracer));
     }
   }
 
   if (restoretargets_fail) {
-    fprintf(stderr, "P_RestoreTargets: Failed to restore %d target pointers.\n",
-            restoretargets_fail);
+    fprintf(stderr, "P_RestoreTargets: Failed to restore %d/%d target pointers.\n",
+            restoretargets_fail, static_cast<int>(std::distance(thinker_list::instance.begin(), thinker_list::instance.end())));
     restoretargets_fail = 0;
   }
 }
@@ -1422,7 +1403,7 @@ template <typename T> void saveg_write_special(T *special) {
 void P_ArchiveSpecials(void) {
   // save off the current thinkers
   for (auto *th : thinker_list::instance) {
-    if (!th->has_any()) {
+    if (!th->has_any_action()) {
       auto ceilIt = std::find(activeceilings.begin(), activeceilings.end(),
                               reinterpret_cast<ceiling_t *>(th));
       if (ceilIt != activeceilings.end())

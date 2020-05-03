@@ -188,7 +188,7 @@ void M_CrispyToggleColoredblood(int choice)
     crispy->coloredblood = !crispy->coloredblood;
 
     // [crispy] switch NOBLOOD flag for Lost Souls
-    for(thinker_t* th : thinker_list::instance)
+    for(auto* th : thinker_list::instance)
     {
 	if (auto*const mobj = thinker_cast<mobj_t>(th); mobj)
 	{

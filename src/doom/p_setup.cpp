@@ -1143,7 +1143,7 @@ P_SetupLevel
     Z_FreeTags (PU_LEVEL, PU_PURGELEVEL-1);
 
     // UNUSED W_Profile ();
-    thinker_list::instance.init();
+    thinker_list::instance = {};
 
     // if working with a devlopment map, reload it
     W_Reload ();

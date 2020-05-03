@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <list>
 #include <variant>
 
 //
@@ -160,12 +161,7 @@ public:
 //  an actor.
 // typedef actionf_t  think_t;
 
-struct thinker_t;
-
-// Doubly linked list of actors.
 struct thinker_t {
-  struct thinker_t *prev;
-  struct thinker_t *next;
   actionf_t function;
 
   thinker_t() = default;
@@ -214,8 +210,8 @@ struct mobj_thinker {
   constexpr bool has_any_action() { return thinker.has_any(); }
 
 protected:
-      void set_thinker(actionf_t action) { thinker = action; }
-      void reset() { thinker.reset(); }
+  template <typename T> void enable() { thinker = thinker_trait<T>::func; }
+  void disable() { thinker.reset(); }
 };
 
 template <typename T> T *thinker_cast(mobj_thinker *obj) {
@@ -227,75 +223,27 @@ template <typename T> T *is_a(T *obj) {
 }
 
 class thinker_list {
-  thinker_t sentinel;
+  std::list<mobj_thinker *> thinkers;
 
 public:
   static thinker_list instance;
 
-  class iterator {
-    thinker_t *current;
+  using iterator = decltype(thinkers)::iterator;
 
-  public:
-    using value_type = thinker_t *;
-    using iterator_category = std::forward_iterator_tag;
-    using difference_type = ptrdiff_t;
-    using reference = thinker_t *;
-
-    constexpr iterator(thinker_t *val) : current(val) {}
-
-    constexpr iterator &operator++() {
-      current = current->next;
-      return *this;
-    }
-
-    constexpr thinker_t *operator*() { return current; }
-
-    constexpr bool operator==(iterator const &other) const {
-      return current == other.current;
-    }
-
-    constexpr bool operator!=(iterator const &other) const {
-      return !operator==(other);
-    }
-  };
-
-  constexpr thinker_list() noexcept : sentinel{} { init(); }
-
-  [[nodiscard]] constexpr iterator begin() noexcept { return {sentinel.next}; }
-
-  [[nodiscard]] constexpr iterator end() noexcept { return {&sentinel}; }
+  [[nodiscard]] iterator begin() noexcept { return thinkers.begin(); }
+  [[nodiscard]] iterator end() noexcept { return thinkers.end(); }
 
   constexpr void push_back(mobj_thinker *thinker) {
-    sentinel.prev->next = &thinker->thinker;
-    thinker->thinker.next = &sentinel;
-    thinker->thinker.prev = sentinel.prev;
-    sentinel.prev = &thinker->thinker;
+    thinkers.push_back(thinker);
   }
-
-  constexpr void init() { sentinel.prev = sentinel.next = &sentinel; }
 
   void run();
 
-  constexpr uint32_t index_of(thinker_t *thinker);
-  constexpr uint32_t index_of(mobj_thinker *thinker) {
-    return index_of(&thinker->thinker);
-  }
-  constexpr thinker_t *mobj_at(uintptr_t index);
+  uint32_t index_of(mobj_t *mobj);
+  mobj_t *mobj_at(uintptr_t index);
 
 private:
-  void remove(thinker_t *thinker) {
-    thinker->next->prev = thinker->prev;
-    thinker->prev->next = thinker->next;
-  }
+      void clear_removed();
 };
 
 inline thinker_list thinker_list::instance{};
-
-namespace std {
-template <> struct iterator_traits<thinker_list::iterator> {
-  using value_type = thinker_list::iterator::value_type;
-  using reference = thinker_list::iterator::reference;
-  using difference_type = thinker_list::iterator::difference_type;
-  using iterator_category = thinker_list::iterator::iterator_category;
-};
-} // namespace std
