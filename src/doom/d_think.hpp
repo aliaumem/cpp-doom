@@ -156,66 +156,30 @@ public:
   }
 };
 
-// Historically, "think_t" is yet another
-//  function pointer to a routine to handle
-//  an actor.
-// typedef actionf_t  think_t;
-
-struct thinker_t {
-  actionf_t function;
-
-  thinker_t() = default;
-  thinker_t(actionf_t action) : function(action) {}
-
-  //
-  // P_RemoveThinker
-  // Deallocation is lazy -- it will not actually be freed
-  // until its thinking turn comes up.
-  //
-  constexpr void mark_for_removal() { function.remove(); }
-  constexpr bool needs_removal() const { return function.is_removed(); }
-  constexpr void reset() { function.reset(); }
-
-  template <typename Arg> constexpr thinker_t &operator=(void (*f)(Arg)) {
-    function = f;
-    return *this;
-  }
-
-  constexpr bool has_any() const { return function; }
-};
-
 template <typename T> struct thinker_trait;
-
-template <typename T> T *thinker_cast(thinker_t *th) {
-  if (th->function == thinker_trait<T>::func)
-    return reinterpret_cast<T *>(th);
-  return nullptr;
-}
-
-template <typename T> T *thinker_cast(thinker_t &th) {
-  return thinker_cast<T>(&th);
-}
 
 struct mobj_thinker {
   // List: thinker links.
-  thinker_t thinker;
+  actionf_t function;
 
   mobj_thinker() = default;
-  mobj_thinker(actionf_t action) : thinker(action) {}
+  mobj_thinker(actionf_t action) : function(action) {}
 
-  constexpr bool needs_removal() { return thinker.needs_removal(); }
+  constexpr bool needs_removal() { return function.is_removed(); }
 
-  constexpr void mark_for_removal() { thinker.mark_for_removal(); }
+  constexpr void mark_for_removal() { function.remove(); }
 
-  constexpr bool has_any_action() { return thinker.has_any(); }
+  constexpr bool has_any_action() { return function; }
 
 protected:
-  template <typename T> void enable() { thinker = thinker_trait<T>::func; }
-  void disable() { thinker.reset(); }
+  template <typename T> void enable() { function = thinker_trait<T>::func; }
+  void disable() { function.reset(); }
 };
 
 template <typename T> T *thinker_cast(mobj_thinker *obj) {
-  return thinker_cast<T>(obj->thinker);
+    if (obj->function == thinker_trait<T>::func)
+        return reinterpret_cast<T *>(obj);
+    return nullptr;
 }
 
 template <typename T> T *is_a(T *obj) {

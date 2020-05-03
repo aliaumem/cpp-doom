@@ -47,7 +47,7 @@ void thinker_list::run() {
   clear_removed();
 
   for (auto *currentthinker : thinkers) {
-    currentthinker->thinker.function.call_if(currentthinker);
+    currentthinker->function.call_if(currentthinker);
   }
 }
 
