@@ -1,4 +1,4 @@
-add_library(setup STATIC
+add_library(cpp_setup STATIC
             compatibility.cpp     compatibility.hpp
             display.cpp           display.hpp
             joystick.cpp          joystick.hpp
@@ -14,5 +14,5 @@ add_library(setup STATIC
             txt_keyinput.cpp      txt_keyinput.hpp
             txt_mouseinput.cpp    txt_mouseinput.hpp)
 
-target_include_directories(setup PRIVATE "../" "${CMAKE_CURRENT_BINARY_DIR}/../../")
-target_link_libraries(setup textscreen SDL2::SDL2 SDL2::mixer)
+target_include_directories(cpp_setup PRIVATE "../" "${CMAKE_CURRENT_BINARY_DIR}/../../")
+target_link_libraries(cpp_setup textscreen SDL2::SDL2 SDL2::mixer)

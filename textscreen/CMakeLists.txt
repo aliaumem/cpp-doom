@@ -1,4 +1,4 @@
-add_library(textscreen STATIC
+add_library(cpp_textscreen STATIC
             textscreen.hpp
             txt_conditional.cpp   txt_conditional.hpp
             txt_checkbox.cpp      txt_checkbox.hpp
@@ -22,7 +22,7 @@ add_library(textscreen STATIC
             txt_widget.cpp        txt_widget.hpp
             txt_window.cpp        txt_window.hpp
             txt_window_action.cpp txt_window_action.hpp)
-target_include_directories(textscreen
+target_include_directories(cpp_textscreen
                            INTERFACE "."
                            PRIVATE "../src/")
-target_link_libraries(textscreen m SDL2::SDL2)
+target_link_libraries(cpp_textscreen m SDL2::SDL2)

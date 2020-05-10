@@ -1,4 +1,4 @@
-add_library(opl STATIC
+add_library(cpp_opl STATIC
             opl_internal.hpp
             opl.cpp           opl.hpp
             opl_linux.cpp
@@ -9,7 +9,7 @@ add_library(opl STATIC
             opl_win32.cpp
             ioperm_sys.cpp    ioperm_sys.hpp
             opl3.cpp          opl3.hpp)
-target_include_directories(opl
+target_include_directories(cpp_opl
                            INTERFACE "."
                            PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
-target_link_libraries(opl SDL2::mixer)
+target_link_libraries(cpp_opl SDL2::mixer)
