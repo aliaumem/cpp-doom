@@ -96,7 +96,7 @@ struct opl3_channel {
     Bit8u ch_num;
 };
 
-typedef struct opl3_writebuf {
+struct opl3_writebuf {
     Bit64u time;
     Bit16u reg;
     Bit8u data;

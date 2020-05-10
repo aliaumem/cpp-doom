@@ -4,9 +4,11 @@ endforeach()
 
 # Common source files used by absolutely everything:
 
+set(MAIN_SOURCE_FILE
+        i_main.cpp)
+
 set(COMMON_SOURCE_FILES
     crispy.cpp             crispy.hpp
-    i_main.cpp
     i_system.cpp           i_system.hpp
     m_argv.cpp             m_argv.hpp
     m_misc.cpp             m_misc.hpp)
@@ -30,7 +32,7 @@ set(DEDSERV_FILES
     net_structrw.cpp      net_structrw.hpp
     z_native.cpp          z_zone.hpp ../utils/lump.hpp)
 
-add_executable("${PROGRAM_PREFIX}server" WIN32 ${COMMON_SOURCE_FILES} ${DEDSERV_FILES})
+add_executable("${PROGRAM_PREFIX}server" WIN32 ${MAIN_SOURCE_FILE} ${COMMON_SOURCE_FILES} ${DEDSERV_FILES})
 target_include_directories("${PROGRAM_PREFIX}server"
                            PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
 target_link_libraries("${PROGRAM_PREFIX}server" SDL2::SDL2main SDL2::net)
@@ -131,61 +133,15 @@ if(PNG_FOUND)
     list(APPEND EXTRA_LIBS PNG::PNG)
 endif()
 
-if(WIN32)
-    add_executable("${PROGRAM_PREFIX}doom" WIN32 ${SOURCE_FILES_WITH_DEH} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
-else()
-    add_executable("${PROGRAM_PREFIX}doom" ${SOURCE_FILES_WITH_DEH})
-endif()
+add_library("cpp_deh" ${DEHACKED_SOURCE_FILES})
+target_include_directories("cpp_deh" PRIVATE ${GAME_INCLUDE_DIRS})
 
-target_include_directories("${PROGRAM_PREFIX}doom" PRIVATE ${GAME_INCLUDE_DIRS})
-target_link_libraries("${PROGRAM_PREFIX}doom" cpp_doom ${EXTRA_LIBS})
+add_library("lib${PROGRAM_PREFIX}doom" ${SOURCE_FILES})
+target_include_directories("lib${PROGRAM_PREFIX}doom" PUBLIC ${GAME_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries("lib${PROGRAM_PREFIX}doom" PUBLIC cpp_doom ${EXTRA_LIBS})
 
-if(MSVC)
-    set_target_properties("${PROGRAM_PREFIX}doom" PROPERTIES
-                          LINK_FLAGS "/MANIFEST:NO")
-endif()
-
-if(WIN32)
-    add_executable("${PROGRAM_PREFIX}heretic" WIN32 ${SOURCE_FILES_WITH_DEH} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
-else()
-    #add_executable("${PROGRAM_PREFIX}heretic" ${SOURCE_FILES_WITH_DEH})
-endif()
-
-#target_include_directories("${PROGRAM_PREFIX}heretic" PRIVATE ${GAME_INCLUDE_DIRS})
-#target_link_libraries("${PROGRAM_PREFIX}heretic" heretic ${EXTRA_LIBS})
-
-if(MSVC)
-    set_target_properties("${PROGRAM_PREFIX}heretic" PROPERTIES
-                          LINK_FLAGS "/MANIFEST:NO")
-endif()
-
-if(WIN32)
-    add_executable("${PROGRAM_PREFIX}hexen" WIN32 ${SOURCE_FILES} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
-else()
-    #add_executable("${PROGRAM_PREFIX}hexen" ${SOURCE_FILES})
-endif()
-
-#target_include_directories("${PROGRAM_PREFIX}hexen" PRIVATE ${GAME_INCLUDE_DIRS})
-#target_link_libraries("${PROGRAM_PREFIX}hexen" hexen ${EXTRA_LIBS})
-
-if(MSVC)
-    set_target_properties("${PROGRAM_PREFIX}hexen" PROPERTIES
-                          LINK_FLAGS "/MANIFEST:NO")
-endif()
-
-if(WIN32)
-    add_executable("${PROGRAM_PREFIX}strife" WIN32 ${SOURCE_FILES_WITH_DEH} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
-else()
-    #add_executable("${PROGRAM_PREFIX}strife" ${SOURCE_FILES_WITH_DEH})
-endif()
-
-#target_include_directories("${PROGRAM_PREFIX}strife" PRIVATE ${GAME_INCLUDE_DIRS})
-#target_link_libraries("${PROGRAM_PREFIX}strife" strife ${EXTRA_LIBS})
-
-if(MSVC)
-    set_target_properties("${PROGRAM_PREFIX}strife" PROPERTIES
-                          LINK_FLAGS "/MANIFEST:NO")
-endif()
+add_executable("${PROGRAM_PREFIX}doom" ${MAIN_SOURCE_FILE})
+target_link_libraries("${PROGRAM_PREFIX}doom" -Wl,--start-group "lib${PROGRAM_PREFIX}doom" cpp_deh cpp_doom -Wl,--end-group )
 
 # Source files needed for chocolate-setup:
 

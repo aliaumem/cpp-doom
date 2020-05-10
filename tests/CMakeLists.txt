@@ -1,10 +1,12 @@
 set(TEST_NAME DoomApprovalTests)
 set(CMAKE_CXX_STANDARD 20)
+
 set(SOURCE_FILES
-        main.cpp)
+        main.cpp
+        test1.cpp)
 
 add_executable("cpp_${TEST_NAME}" ${SOURCE_FILES})
-target_link_libraries("cpp_${TEST_NAME}" cpp_doom ApprovalTests::ApprovalTests Catch2::Catch2)
+target_link_libraries("cpp_${TEST_NAME}" -Wl,--start-group "libcpp-doom" cpp_deh cpp_doom ApprovalTests::ApprovalTests Catch2::Catch2)
 add_test(NAME "cpp_${TEST_NAME}" COMMAND "cpp_${TEST_NAME}")
 
 function(SET_WARNINGS PROJ_NAME)
