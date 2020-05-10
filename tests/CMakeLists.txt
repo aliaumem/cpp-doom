@@ -3,11 +3,18 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(SOURCE_FILES
         main.cpp
-        test1.cpp)
+        run_main.cpp
+        mock_main.cpp)
 
 add_executable("cpp_${TEST_NAME}" ${SOURCE_FILES})
-target_link_libraries("cpp_${TEST_NAME}" -Wl,--start-group "libcpp-doom" cpp_deh cpp_doom ApprovalTests::ApprovalTests Catch2::Catch2)
+target_link_libraries("cpp_${TEST_NAME}" -Wl,--start-group libcpp-doom cpp_deh cpp_doom -Wl,--end-group ApprovalTests::ApprovalTests Catch2::Catch2)
+target_compile_definitions("cpp_${TEST_NAME}" PRIVATE CPP_DOOM)
 add_test(NAME "cpp_${TEST_NAME}" COMMAND "cpp_${TEST_NAME}")
+
+add_executable("crispy_${TEST_NAME}" ${SOURCE_FILES})
+target_link_libraries("crispy_${TEST_NAME}" -Wl,--start-group libcrispy-doom crispy_deh doom -Wl,--end-group ApprovalTests::ApprovalTests Catch2::Catch2)
+target_compile_definitions("crispy_${TEST_NAME}" PRIVATE CRISPY_DOOM)
+add_test(NAME "crispy_${TEST_NAME}" COMMAND "crispy_${TEST_NAME}")
 
 function(SET_WARNINGS PROJ_NAME)
     if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_SIMULATE_ID MATCHES "MSVC")

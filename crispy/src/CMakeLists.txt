@@ -4,9 +4,11 @@ endforeach()
 
 # Common source files used by absolutely everything:
 
+set(MAIN_SOURCE_FILE
+        i_main.c)
+
 set(COMMON_SOURCE_FILES
     crispy.c             crispy.h
-    i_main.c
     i_system.c           i_system.h
     m_argv.c             m_argv.h
     m_misc.c             m_misc.h)
@@ -131,19 +133,18 @@ if(PNG_FOUND)
     list(APPEND EXTRA_LIBS PNG::PNG)
 endif()
 
-if(WIN32)
-    add_executable("${PROGRAM_PREFIX}doom" WIN32 ${SOURCE_FILES_WITH_DEH} "${CMAKE_CURRENT_BINARY_DIR}/resource.rc")
-else()
-    add_executable("${PROGRAM_PREFIX}doom" ${SOURCE_FILES_WITH_DEH})
-endif()
+add_library("crispy_deh" ${DEHACKED_SOURCE_FILES})
+target_include_directories("crispy_deh" PRIVATE ${GAME_INCLUDE_DIRS})
 
-target_include_directories("${PROGRAM_PREFIX}doom" PRIVATE ${GAME_INCLUDE_DIRS})
-target_link_libraries("${PROGRAM_PREFIX}doom" doom ${EXTRA_LIBS})
+add_library("lib${PROGRAM_PREFIX}doom" ${SOURCE_FILES})
+target_include_directories("lib${PROGRAM_PREFIX}doom" PUBLIC ${GAME_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries("lib${PROGRAM_PREFIX}doom" PUBLIC doom ${EXTRA_LIBS})
 
-if(MSVC)
-    set_target_properties("${PROGRAM_PREFIX}doom" PROPERTIES
-                          LINK_FLAGS "/MANIFEST:NO")
-endif()
+add_executable("${PROGRAM_PREFIX}doom" ${MAIN_SOURCE_FILE})
+target_link_libraries("${PROGRAM_PREFIX}doom" -Wl,--start-group "lib${PROGRAM_PREFIX}doom" crispy_deh doom -Wl,--end-group)
+
+
+
 
 # Source files needed for chocolate-setup:
 

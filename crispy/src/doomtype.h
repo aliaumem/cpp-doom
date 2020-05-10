@@ -103,8 +103,13 @@
 #if defined(__cplusplus) || defined(__bool_true_false_are_defined)
 
 // Use builtin bool type with C++.
+// but union it with the size of an enum in C so that structs don't change size
 
-typedef bool boolean;
+union boolean
+{
+    int i;
+    bool b;
+};
 
 #else
 
