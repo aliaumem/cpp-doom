@@ -1090,7 +1090,7 @@ static struct
 
 // Initialize the game version
 
-static void InitGameVersion(void)
+void InitGameVersion(void)
 {
     byte *demolump;
     char demolumpname[6];

@@ -257,7 +257,7 @@ void I_Quit (void)
 
     SDL_Quit();
 
-    exit(0);
+    throw 0;
 }
 
 
@@ -278,7 +278,7 @@ void I_Error (const char *error, ...)
     if (already_quitting)
     {
         fprintf(stderr, "Warning: recursive call to I_Error detected.\n");
-        exit(-1);
+        throw -1;
     }
     else
     {
@@ -334,7 +334,7 @@ void I_Error (const char *error, ...)
 
     SDL_Quit();
 
-    exit(-1);
+    throw -1;
 }
 
 //

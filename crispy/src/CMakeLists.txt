@@ -10,6 +10,7 @@ set(MAIN_SOURCE_FILE
 set(COMMON_SOURCE_FILES
     crispy.c             crispy.h
     i_system.c           i_system.h
+    i_system_ext.cpp     i_system_ext.h
     m_argv.c             m_argv.h
     m_misc.c             m_misc.h)
 
@@ -103,7 +104,7 @@ set(GAME_SOURCE_FILES
     w_merge.c           w_merge.h
     z_zone.c            z_zone.h)
 
-set(GAME_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/../")
+set(GAME_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/../" "${CMAKE_CURRENT_SOURCE_DIR}/doom")
 
 if(MSVC)
     list(APPEND GAME_SOURCE_FILES

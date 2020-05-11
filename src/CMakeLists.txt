@@ -103,7 +103,7 @@ set(GAME_SOURCE_FILES
     w_merge.cpp           w_merge.hpp
     z_zone.cpp            z_zone.hpp)
 
-set(GAME_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/../")
+set(GAME_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/../" "${CMAKE_CURRENT_SOURCE_DIR}/doom")
 
 if(MSVC)
     list(APPEND GAME_SOURCE_FILES

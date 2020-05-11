@@ -19,18 +19,11 @@ extern "C" {
 #include <array>
 
 #ifdef CRISPY_DOOM
-extern "C" {
-#endif
-extern void D_DoomMain();
-#ifdef CRISPY_DOOM
-}
-#endif
-
-#ifdef CRISPY_DOOM
 enum dummy {};
 static_assert(sizeof(dummy) == sizeof(boolean));
 #endif
 
+extern void new_main(const char* demo_name);
 
 void RunDoomMain(char const* demo)
 {
@@ -47,11 +40,12 @@ void RunDoomMain(char const* demo)
         crispy->platform = SDL_GetPlatform();
     }
 
-    M_FindResponseFile();
-
 #ifdef SDL_HINT_NO_SIGNAL_HANDLERS
     SDL_SetHint(SDL_HINT_NO_SIGNAL_HANDLERS, "1");
 #endif
 
-    D_DoomMain();
+    new_main(demo);
 }
+
+
+

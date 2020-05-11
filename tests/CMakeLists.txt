@@ -4,7 +4,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(SOURCE_FILES
         main.cpp
         run_main.cpp
-        mock_main.cpp)
+        mock_main.cpp
+        new_main.cpp)
 
 add_executable("cpp_${TEST_NAME}" ${SOURCE_FILES})
 target_link_libraries("cpp_${TEST_NAME}" -Wl,--start-group libcpp-doom cpp_deh cpp_doom -Wl,--end-group ApprovalTests::ApprovalTests Catch2::Catch2)

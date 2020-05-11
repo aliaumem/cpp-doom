@@ -102,14 +102,11 @@
 
 #if defined(__cplusplus) || defined(__bool_true_false_are_defined)
 
-// Use builtin bool type with C++.
-// but union it with the size of an enum in C so that structs don't change size
-
-union boolean
-{
-    int i;
-    bool b;
-};
+// Don't use builtin bool type with C++, however tempting it is
+// Because C++'s bool type is 1 byte and the C enum is 4 bytes,
+// when cross-linking there are big offset errors if using a simple typedef.
+// Let's rely on implicit conversions instead
+typedef uint32_t boolean;
 
 #else
 

@@ -45,6 +45,7 @@
 #include "i_video.h"
 
 #include "i_system.h"
+#include "i_system_ext.h"
 
 #include "w_wad.h"
 #include "z_zone.h"
@@ -260,7 +261,7 @@ void I_Quit (void)
 
     SDL_Quit();
 
-    exit(0);
+    ExitGracefully(0);
 }
 
 
@@ -281,7 +282,7 @@ void I_Error (const char *error, ...)
     if (already_quitting)
     {
         fprintf(stderr, "Warning: recursive call to I_Error detected.\n");
-        exit(-1);
+        ExitGracefully(-1);
     }
     else
     {
@@ -337,7 +338,7 @@ void I_Error (const char *error, ...)
 
     SDL_Quit();
 
-    exit(-1);
+    ExitGracefully(-1);
 }
 
 //
