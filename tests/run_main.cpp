@@ -1,3 +1,4 @@
+#include "lump_testing.hpp"
 #include "ApprovalTests.hpp"
 #include "catch2/catch.hpp"
 
@@ -5,10 +6,9 @@
 
 using namespace ApprovalTests;
 
-
 TEST_CASE("Launch_Doom_Main")
 {
-    auto demo = GENERATE("02NOVIEW.LMP", "E1M2SAW.LMP", "E2M4ALL.LMP"/*, "E3M9STUK.LMP", "FUSEDEM2.LMP",
+    auto demos = std::array{"02NOVIEW.LMP", "E1M2SAW.LMP", "E2M4ALL.LMP"/*, "E3M9STUK.LMP", "FUSEDEM2.LMP",
                          "07INTOWR.LMP", "E1M2SEC.LMP", "E2M4EXIT.LMP", "E4M1ALL.LMP", "GARR-XPE.LMP",
                          "07TOWER.LMP", "E1M3SEC.LMP", "E2M4STUK.LMP", "E4M1SWCH.LMP", "GHOSTPE1.LMP",
                          "22NOVIEW.LMP", "E1M4EXIT.LMP", "E2M4TRAP.LMP", "E4M1WIN.LMP", "GHOSTPE2.LMP",
@@ -29,10 +29,14 @@ TEST_CASE("Launch_Doom_Main")
                          "DEADLIFT.LMP", "E2M1ALL.LMP", "E3M7ALL.LMP", "E4M7EXIT.LMP", "TALLBOMB.LMP",
                          "DEDNGONE.LMP", "E2M2TRIK.LMP", "E3M7ALT.LMP", "FIREWALL.LMP", "TAPFOCUS.LMP",
                          "E1M1SEC.LMP", "E2M3SEC.LMP", "E3M8WIN.LMP", "FLICKER.LMP", "THINGRUN.LMP",
-                         "E1M1SWCH.LMP", "E2M3SUIT.LMP", "E3M9EXIT.LMP", "FUSEDEM1.LMP", "WALLRUN.LMP"*/
-            );
-    SECTION("Run Main")
+                         "E1M1SWCH.LMP", "E2M3SUIT.LMP", "E3M9EXIT.LMP", "FUSEDEM1.LMP", "WALLRUN.LMP"*/};
+    for(auto demo : demos)
     {
-        RunDoomMain(demo);
+        SECTION(demo)
+        {
+            RunDoomMain(demo);
+
+            Approvals::verify(doom::testing_utils::lump_ops);
+        }
     }
 }
