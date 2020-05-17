@@ -71,6 +71,6 @@ configure_file(src/resource.rc.in src/resource.rc)
 configure_file(src/setup-res.rc.in src/setup-res.rc)
 configure_file(src/setup/setup-manifest.xml.in src/setup/setup-manifest.xml)
 
-foreach(SUBDIR textscreen midiproc opl pcsound src crispy lib tests)
+foreach(SUBDIR textscreen midiproc opl pcsound src crispy lib tests testing_tools)
     add_subdirectory("${SUBDIR}")
 endforeach()

@@ -47,6 +47,7 @@
 #include "i_video.hpp"
 
 #include "i_system.hpp"
+#include "i_system_ext.h"
 
 #include "../utils/memory.hpp"
 #include "w_wad.hpp"
@@ -259,7 +260,7 @@ void I_Quit (void)
 
     SDL_Quit();
 
-    throw std::runtime_error{std::to_string(0)};
+    ExitGracefully(0);
 }
 
 
@@ -280,7 +281,7 @@ void I_Error (const char *error, ...)
     if (already_quitting)
     {
         fprintf(stderr, "Warning: recursive call to I_Error detected.\n");
-        throw std::runtime_error{std::to_string(-1)};
+        ExitGracefully(-1);
     }
     else
     {
@@ -336,7 +337,7 @@ void I_Error (const char *error, ...)
 
     SDL_Quit();
 
-    throw std::runtime_error{std::to_string(-1)};
+    ExitGracefully(-1);
 }
 
 //

@@ -10,7 +10,6 @@ set(MAIN_SOURCE_FILE
 set(COMMON_SOURCE_FILES
     crispy.c             crispy.h
     i_system.c           i_system.h
-    i_system_ext.cpp     i_system_ext.h
     m_argv.c             m_argv.h
     m_misc.c             m_misc.h)
 
@@ -139,7 +138,7 @@ target_include_directories("crispy_deh" PRIVATE ${GAME_INCLUDE_DIRS})
 
 add_library("lib${PROGRAM_PREFIX}doom" ${SOURCE_FILES})
 target_include_directories("lib${PROGRAM_PREFIX}doom" PUBLIC ${GAME_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries("lib${PROGRAM_PREFIX}doom" PUBLIC doom ${EXTRA_LIBS})
+target_link_libraries("lib${PROGRAM_PREFIX}doom" PUBLIC doom testing_tools ${EXTRA_LIBS})
 
 add_executable("${PROGRAM_PREFIX}doom" ${MAIN_SOURCE_FILE})
 target_link_libraries("${PROGRAM_PREFIX}doom" -Wl,--start-group "lib${PROGRAM_PREFIX}doom" crispy_deh doom -Wl,--end-group)

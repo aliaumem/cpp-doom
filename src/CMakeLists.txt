@@ -138,7 +138,8 @@ target_include_directories("cpp_deh" PRIVATE ${GAME_INCLUDE_DIRS})
 
 add_library("lib${PROGRAM_PREFIX}doom" ${SOURCE_FILES})
 target_include_directories("lib${PROGRAM_PREFIX}doom" PUBLIC ${GAME_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries("lib${PROGRAM_PREFIX}doom" PUBLIC cpp_doom ${EXTRA_LIBS})
+target_link_libraries("lib${PROGRAM_PREFIX}doom" PUBLIC cpp_doom testing_tools
+        ${EXTRA_LIBS})
 
 add_executable("${PROGRAM_PREFIX}doom" ${MAIN_SOURCE_FILE})
 target_link_libraries("${PROGRAM_PREFIX}doom" -Wl,--start-group "lib${PROGRAM_PREFIX}doom" cpp_deh cpp_doom -Wl,--end-group )
