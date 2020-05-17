@@ -101,18 +101,24 @@ void Z_ClearZone (memzone_t* zone)
 //
 // Z_Init
 //
-void Z_Init (void)
+void Z_InitMem(std::byte* memory_zone, int size);
+
+void Z_Init (void) {
+    int size;
+    std::byte* memory_zone = reinterpret_cast<std::byte*>(I_ZoneBase(&size));
+    Z_InitMem(memory_zone, size);
+}
+void Z_InitMem(std::byte* memory_zone, int size)
 {
     memblock_t*	block;
-    int		size;
 
-    mainzone = (memzone_t *)I_ZoneBase (&size);
+    mainzone = reinterpret_cast<memzone_t *>(memory_zone);
     mainzone->size = size;
 
     // set the entire zone to one free block
     mainzone->blocklist.next =
 	mainzone->blocklist.prev =
-	block = (memblock_t *)( (byte *)mainzone + sizeof(memzone_t) );
+	block = reinterpret_cast<memblock_t *>( reinterpret_cast<std::byte *>(mainzone) + sizeof(memzone_t) );
 
     mainzone->blocklist.user = reinterpret_cast<void **>(mainzone);
     mainzone->blocklist.tag = PU_STATIC;
@@ -186,7 +192,10 @@ void Z_Free (void* ptr)
     block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
 
     if (block->id != ZONEID)
-	I_Error ("Z_Free: freed a pointer without ZONEID");
+    {
+        Z_DumpHeap(PU_STATIC, PU_NUM_TAGS);
+	I_Error ("Z_Free: freed a pointer without ZONEID (%p)", block);
+    }
 
     if (block->tag != PU_FREE && block->user != NULL)
     {
@@ -414,8 +423,8 @@ Z_DumpHeap
     for (block = mainzone->blocklist.next ; ; block = block->next)
     {
 	if (block->tag >= lowtag && block->tag <= hightag)
-	    printf ("block:%p    size:%7i    user:%p    tag:%3i\n",
-		    block, block->size, block->user, block->tag);
+	    printf ("block:%p    size:%7i    user:%p    tag:%3i id:%p\n",
+		    block, block->size, block->user, block->tag, block->id);
 		
 	if (block->next == &mainzone->blocklist)
 	{

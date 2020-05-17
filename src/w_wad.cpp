@@ -62,7 +62,7 @@ lumpinfo_t **lumpinfo;
 unsigned int numlumps = 0;
 
 // Hash table for fast lookups
-static lumpindex_t *lumphash;
+lumpindex_t *lumphash;
 
 // Variables for the reload hack: filename of the PWAD to reload, and the
 // lumps from WADs before the reload file, so we can resent numlumps and
@@ -415,6 +415,8 @@ void *W_CacheLumpNum(lumpindex_t lumpnum, int tag)
     // region.  If the lump is in an ordinary file, we may already
     // have it cached; otherwise, load it into memory.
 
+    printf("Trying to cache lump %d\t%.8s - \t\t", lumpnum, lump->name);
+
     if (lump->wad_file->mapped != NULL)
     {
         // Memory mapped file, return from the mmapped region.
@@ -424,14 +426,14 @@ void *W_CacheLumpNum(lumpindex_t lumpnum, int tag)
     else if (lump->cache != NULL)
     {
         // Already cached, so just switch the zone tag.
-
+        printf("already cached\n");
         result = lump->cache;
         Z_ChangeTag(lump->cache, tag);
     }
     else
     {
         // Not yet loaded, so load it now
-
+        printf("caching (tag %d)\n", tag);
         lump->cache = zmalloc<decltype(lump->cache)>(W_LumpLength(lumpnum), tag, &lump->cache);
 	W_ReadLump (lumpnum, lump->cache);
         result = lump->cache;
@@ -464,6 +466,7 @@ void W_ReleaseLumpNum(lumpindex_t lumpnum)
 {
     lumpinfo_t *lump;
 
+    printf("Releasing %d \t%.8s\n", lumpnum, lumpinfo[lumpnum]->name);
     if ((unsigned)lumpnum >= numlumps)
     {
 	I_Error ("W_ReleaseLumpNum: %i >= numlumps", lumpnum);
@@ -579,7 +582,7 @@ void W_GenerateHashTable(void)
             unsigned int hash;
 
             hash = W_LumpNameHash(lumpinfo[i]->name) % numlumps;
-
+            //printf("%d for %8s\n", hash, lumpinfo[i]->name);
             // Hook into the hash table
 
             lumpinfo[i]->next = lumphash[hash];

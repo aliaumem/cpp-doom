@@ -28,6 +28,8 @@
 #include <windows.h>
 #else
 #include <unistd.h>
+#include <stdexcept>
+
 #endif
 
 #include "SDL.h"
@@ -257,7 +259,7 @@ void I_Quit (void)
 
     SDL_Quit();
 
-    throw 0;
+    throw std::runtime_error{std::to_string(0)};
 }
 
 
@@ -266,7 +268,7 @@ void I_Quit (void)
 // I_Error
 //
 
-static boolean already_quitting = false;
+boolean already_quitting = false;
 
 void I_Error (const char *error, ...)
 {
@@ -278,7 +280,7 @@ void I_Error (const char *error, ...)
     if (already_quitting)
     {
         fprintf(stderr, "Warning: recursive call to I_Error detected.\n");
-        throw -1;
+        throw std::runtime_error{std::to_string(-1)};
     }
     else
     {
@@ -334,7 +336,7 @@ void I_Error (const char *error, ...)
 
     SDL_Quit();
 
-    throw -1;
+    throw std::runtime_error{std::to_string(-1)};
 }
 
 //

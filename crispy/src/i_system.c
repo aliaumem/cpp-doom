@@ -270,7 +270,7 @@ void I_Quit (void)
 // I_Error
 //
 
-static boolean already_quitting = false;
+boolean already_quitting = false;
 
 void I_Error (const char *error, ...)
 {

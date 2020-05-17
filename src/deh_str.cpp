@@ -33,9 +33,9 @@ char *from_text;
 char *to_text;
 };
 
-static deh_substitution_t **hash_table = NULL;
-static int hash_table_entries;
-static int hash_table_length = -1;
+deh_substitution_t **hash_table = NULL;
+int hash_table_entries;
+int hash_table_length = -1;
 
 // This is the algorithm used by glib
 

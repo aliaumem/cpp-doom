@@ -98,12 +98,19 @@ void Z_ClearZone (memzone_t* zone)
 //
 // Z_Init
 //
-void Z_Init (void)
+void Z_InitMem(byte* memory_zone, int size);
+
+void Z_Init (void) {
+    int size;
+    byte* memory_block = I_ZoneBase(&size);
+    Z_InitMem(memory_block, size);
+}
+
+void Z_InitMem(byte* memory_zone, int size)
 {
     memblock_t*	block;
-    int		size;
 
-    mainzone = (memzone_t *)I_ZoneBase (&size);
+    mainzone = (memzone_t *)memory_zone;
     mainzone->size = size;
 
     // set the entire zone to one free block

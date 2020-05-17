@@ -32,9 +32,9 @@ typedef struct
     char *to_text;
 } deh_substitution_t;
 
-static deh_substitution_t **hash_table = NULL;
-static int hash_table_entries;
-static int hash_table_length = -1;
+deh_substitution_t **hash_table = NULL;
+int hash_table_entries;
+int hash_table_length = -1;
 
 // This is the algorithm used by glib
 

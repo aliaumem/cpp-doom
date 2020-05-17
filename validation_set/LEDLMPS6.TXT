@@ -1,0 +1,110 @@
+Odd/miscellaneous demos for v1.9 PC Doom/Doom II games
+
+Demo files by Ledmeister (ledmeister@aol.com), available at
+http://classicdoom.com/odddemos.htm
+
+To use demos from DOS: Copy the demo files into your game's
+directory (i.e. Doom2, Doom95, TNT, etc.); then in DOS
+mode, switch into your game's directory.
+
+From this point, demo playback commands will vary slightly,
+depending on which game the demos were made for.
+
+For Doom 1 or Ultimate Doom demos, type
+
+doom -playdemo DEMONAME
+
+where DEMONAME is the filename (minus the ".LMP") of the
+demo you want to see.  For example, type
+
+doom -playdemo impfight
+
+at the DOS prompt in your game's directory to play the demo
+IMPFIGHT.LMP.
+
+For Doom II or Final Doom demos, type
+
+doom2 -playdemo DEMONAME
+
+where DEMONAME is the filename (minus the ".LMP") of the
+demo you want to see.  For example, type
+
+doom2 -playdemo dedngone
+
+at the DOS prompt in your game's directory to play the demo
+DEDNGONE.LMP.
+
+For Doom II Master Levels demos, type
+
+doom2 -file WADNAME.wad -playdemo DEMONAME
+
+where WADNAME is the filename of the Master Levels WAD that
+you want to use (which must also be in the same directory),
+and DEMONAME is the filename (minus the ".LMP") of the demo
+you want to see.  For example, type
+
+doom2 -file combine.wad -playdemo combslip
+
+at the DOS prompt in your game's directory to play the demo
+COMBSLIP.LMP.
+
+For more info see http://classicdoom.com/how-lmps.htm
+
+The following 46 demo files for PC Doom/Doom II games v1.9
+are included in LEDLMPS6.ZIP:
+
+IMPFIGHT.LMP (Doom 1): Two Imps fight each other
+D1SHOCK.LMP (Doom 1): Example of "shock" face in status bar
+BOHFIGHT.LMP (Doom 1): Two Barons fight each other
+STILHERE.LMP (Doom 1): Teleporter fails to teleport player
+FUSEDEM1.LMP (Doom 1): Pink-Demon pairs are stuck together
+WALLRUN.LMP (Doom 1): Running along a wall to boost speed
+SPEEDBMP.LMP (Doom 1): Lost Souls get stuck on common Items
+TAPFOCUS.LMP (Doom 1): Firing style affects bullet accuracy
+STUCKIMP.LMP (Doom 1): Example of monster stuck in doorway
+D1SLIDE.LMP (Doom 1): Dead player slides along raised edge
+E3M6PUFF.LMP (Doom 1): Hitscan attacks are stopped mid-air
+E4M3STUK.LMP (Ultimate Doom): Player is trapped by crusher
+E4M6UXO.LMP (Ultimate Doom): Rockets vanish in mid-flight
+DEDNGONE.LMP (Doom 2): Player exits a level with 0% health
+02NOVIEW.LMP (Doom 2): Map 02 Sergeant is sometimes blind
+FLICKER.LMP (Doom 2): Ending view/scene may blink or freeze
+IMPMISS.LMP (Doom 2): Imps can't hit still player (Map 06)
+D2SLIDE.LMP (Doom 2): Dead monster slides across the ground
+07TOWER.LMP (Doom 2): Exit step becomes tower, outside view
+07INTOWR.LMP (Doom 2): Exit step becomes tower, inside view
+FIREWALL.LMP (Doom 2): Mancubus fireballs pierce solid wall
+BOUNCE1.LMP (Doom 2): Player's corpse "bounces" repeatedly
+BOUNCE2.LMP (Doom 2): Player's corpse bounces/slides around
+SOULPOP.LMP (Doom 2): Pain Elemental hits max attack height
+IMPMISS2.LMP (Doom 2): Imps can't hit still player (Map 13)
+TALLBOMB.LMP (Doom 2): Example of a "tall" rocket explosion
+REVORBIT.LMP (Doom 2): Revenant missile orbits the player
+IMPGHOST.LMP (Doom 2): A ghost Imp is created, then killed
+2GHOSTS.LMP (Doom 2): Two ghost Imps are created and killed
+CACOFITE.LMP (Doom 2): Two Cacodemons fight each other
+CACOFIT2.LMP (Doom 2): Two Cacodemons gang up on a third
+BFGDEMO.LMP (Doom 2): Player emits secondary BFG9000 rays
+BURNTHRU.LMP (Doom 2): Example of radiation suit failure
+22NOVIEW.LMP (Doom 2): Open door still blocks enemy vision
+THINGRUN.LMP (Doom 2): Running along barrels to boost speed
+GHOSTPE1.LMP (Doom 2): A ghost Pain Elemental is created
+GHOSTPE2.LMP (Doom 2): Ghost is killed with a plasma rifle
+SMPUNCH.LMP (Doom2): Player kills a Mastermind with punches
+D2SHOCK.LMP (Doom 2): Example of "shock" face in status bar
+FUSEDEM2.LMP (Doom 2): Two pink Demons are stuck together
+COMBSLIP.LMP (M Level/Combine): Player corpse pierces wall
+GARR-XPE.LMP (M Level/Garrison): Lost Soul spawns past wall
+MANORMIS.LMP (M Level/Manor): Sergeant evades death
+SOULFRAG.LMP (FD/TNT): Lost Soul telefrags player on map 30
+BLINDAV.LMP (FD/Plutonia): Arch-Vile is temporarily blinded
+REVFIGHT.LMP (FD/Plutonia): Two Revenants fight each other
+NONTOXIC.LMP (FD/Plutonia): Barrel explosion is harmless
+DEADLIFT.LMP (FD/Plutonia): Map 30's first elevator fails
+
+NOTE: The Master Levels demos BLACKBUG.LMP, MANORBUG.LMP
+and MEPH-BUG.LMP are not included in this collection, since
+they may cause software crashes when replayed using certain
+engines or source ports.  These 3 demos can be downloaded
+individually from: http://classicdoom.com/odddemos.htm
+Read the warning notices there before downloading the LMPs.

@@ -25,6 +25,7 @@
 #define __Z_ZONE__
 
 #include <stdio.h>
+#include <cstddef>
 
 //
 // ZONE MEMORY
@@ -51,6 +52,7 @@ enum
         
 
 void	Z_Init (void);
+void	Z_InitMem (std::byte* memory_zone, int size);
 void*	Z_Malloc (int size, int tag, void *ptr);
 void    Z_Free (void *ptr);
 void    Z_FreeTags (int lowtag, int hightag);

@@ -48,9 +48,13 @@ extern "C" {
 #include <m_misc.hpp>
 #include <cstdlib>
 #include <net_client.hpp>
+#include <vector>
 #include "d_main.hpp"
 #include "z_zone.hpp"
 #endif
+
+#include <vector>
+#include <stdexcept>
 
 #ifdef CRISPY_DOOM
 extern "C" {
@@ -79,14 +83,20 @@ void new_main(const char* demo_name)
 {
     char file[256];
     char demolumpname[9];
-    int numiwadlumps;
 
-    Z_Init ();
+    std::vector<std::byte> ram(32*1024*1024); // Give it 32MB of Ram
+    printf("RAM is located at %p\n", static_cast<void*>(ram.data()));
+#ifdef CRISPY_DOOM
+    auto ramBuff = reinterpret_cast<uint8_t*>(ram.data());
+#elif CPP_DOOM
+    auto ramBuff = ram.data();
+#endif
+    Z_InitMem (ramBuff, static_cast<int>(ram.size()));
 
     {
         // Auto-detect the configuration dir.
 
-        M_SetConfigDir(NULL);
+        M_SetConfigDir(nullptr);
     }
 
     // init subsystems
@@ -113,7 +123,6 @@ void new_main(const char* demo_name)
     modifiedgame = false;
 
     W_AddFile(iwadfile);
-    numiwadlumps = numlumps;
 
     W_CheckCorrectIWAD(doom);
 
@@ -254,8 +263,8 @@ void new_main(const char* demo_name)
     }
 
     I_InitTimer();
-    I_InitSound(true);
-    I_InitMusic();
+    //I_InitSound(true);
+    //I_InitMusic();
 
     // [crispy] check for SSG resources
     crispy->havessg =
@@ -361,12 +370,6 @@ void new_loop ()
     I_SetWindowTitle(gamedescription);
     I_GraphicsCheckCommandLine();
     I_SetGrabMouseCallback([]() -> boolean {return false;});
-    I_InitGraphics();
-    // [crispy] re-init HUD widgets now just in case graphics were not initialized before
-    if (crispy->widescreen && aspect_ratio_correct)
-    {
-        M_CrispyReinitHUDWidgets();
-    }
     EnableLoadingDisk();
 
     TryRunTics();
@@ -386,7 +389,7 @@ void new_loop ()
             D_RunFrame();
         }
     }
-    catch(int&)
+    catch(std::runtime_error&)
     {
         // let's get out gracefully
     }

@@ -35,8 +35,8 @@ static const int diskicon_threshold = 20*1024;
 // Two buffers: disk_data contains the data representing the disk icon
 // (raw, not a patch_t) while saved_background is an equivalently-sized
 // buffer where we save the background data while the disk is on screen.
-static pixel_t *disk_data;
-static pixel_t *saved_background;
+pixel_t *disk_data;
+pixel_t *saved_background;
 
 static int loading_disk_xoffs = 0;
 static int loading_disk_yoffs = 0;

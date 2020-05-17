@@ -394,7 +394,7 @@ static void DoMerge(void)
     int i, n;
 
     // Can't ever have more lumps than we already have
-    newlumps = static_cast<decltype(newlumps)>(calloc(numlumps, sizeof(lumpinfo_t *)));
+    newlumps = static_cast<lumpinfo_t**>(calloc(numlumps, sizeof(lumpinfo_t *)));
     num_newlumps = 0;
 
     // Add IWAD lumps
