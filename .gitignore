@@ -37,6 +37,7 @@ STRIFE*.pcx
 cmake-build-debug
 cmake-build-release
 .idea
+*.received.*
 
 # These are the default patterns globally ignored by Subversion:
 *.o
