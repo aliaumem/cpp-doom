@@ -267,7 +267,7 @@ wad_file_t *W_AddFile (const char *filename)
 //
 // W_NumLumps
 //
-int W_NumLumps (void)
+int W_NumLumps ()
 {
     return numlumps;
 }
@@ -279,16 +279,14 @@ int W_NumLumps (void)
 // Returns -1 if name not found.
 //
 lumpindex_t CheckNumForName(std::string_view name) {
-  lumpindex_t i;
-
   // Do we have a hash table yet?
 
-  if (lumphash != NULL) {
+  if (lumphash != nullptr) {
     // We do! Excellent.
 
     auto hash = HashName(name) % numlumps;
 
-    for (i = lumphash[hash]; i != -1; i = lumpinfo[i]->next) {
+    for (lumpindex_t i = lumphash[hash]; i != -1; i = lumpinfo[i]->next) {
       if (case_insensitive_cmp(lumpname_to_sv(lumpinfo[i]->name), name)) {
         return i;
       }
@@ -297,7 +295,7 @@ lumpindex_t CheckNumForName(std::string_view name) {
     // We don't have a hash table generate yet. Linear search :-(
     // scan backwards so patch lump files take precedence
 
-    for (i = numlumps - 1; i >= 0; --i) {
+    for (lumpindex_t i = numlumps - 1; i >= 0; --i) {
       if (case_insensitive_cmp(lumpname_to_sv(lumpinfo[i]->name), name)) {
         return i;
       }
@@ -415,13 +413,13 @@ void *W_CacheLumpNum(lumpindex_t lumpnum, int tag)
     // region.  If the lump is in an ordinary file, we may already
     // have it cached; otherwise, load it into memory.
 
-    if (lump->wad_file->mapped != NULL)
+    if (lump->wad_file->mapped != nullptr)
     {
         // Memory mapped file, return from the mmapped region.
 
         result = lump->wad_file->mapped + lump->position;
     }
-    else if (lump->cache != NULL)
+    else if (lump->cache != nullptr)
     {
         // Already cached, so just switch the zone tag.
         RecordAlreadyCached(lump->name, lumpnum, tag);
@@ -473,7 +471,7 @@ void W_ReleaseLumpNum(lumpindex_t lumpnum)
 
     lump = lumpinfo[lumpnum];
 
-    if (lump->wad_file->mapped != NULL)
+    if (lump->wad_file->mapped != nullptr)
     {
         // Memory-mapped file, so nothing needs to be done here.
     }
@@ -488,102 +486,26 @@ void W_ReleaseLumpName(const char *name)
     W_ReleaseLumpNum(W_GetNumForName(name));
 }
 
-#if 0
-
-//
-// W_Profile
-//
-int		info[2500][10];
-int		profilecount;
-
-void W_Profile (void)
-{
-    int		i;
-    memblock_t*	block;
-    void*	ptr;
-    char	ch;
-    FILE*	f;
-    int		j;
-    char	name[9];
-	
-	
-    for (i=0 ; i<numlumps ; i++)
-    {	
-	ptr = lumpinfo[i].cache;
-	if (!ptr)
-	{
-	    ch = ' ';
-	    continue;
-	}
-	else
-	{
-	    block = (memblock_t *) ( (byte *)ptr - sizeof(memblock_t));
-	    if (block->tag < PU_PURGELEVEL)
-		ch = 'S';
-	    else
-		ch = 'P';
-	}
-	info[i][profilecount] = ch;
-    }
-    profilecount++;
-	
-    f = fopen ("waddump.txt","w");
-    name[8] = 0;
-
-    for (i=0 ; i<numlumps ; i++)
-    {
-	memcpy (name,lumpinfo[i].name,8);
-
-	for (j=0 ; j<8 ; j++)
-	    if (!name[j])
-		break;
-
-	for ( ; j<8 ; j++)
-	    name[j] = ' ';
-
-	fprintf (f,"%s ",name);
-
-	for (j=0 ; j<profilecount ; j++)
-	    fprintf (f,"    %c",info[i][j]);
-
-	fprintf (f,"\n");
-    }
-    fclose (f);
-}
-
-
-#endif
 
 // Generate a hash table for fast lookups
 
-void W_GenerateHashTable(void)
+void W_GenerateHashTable()
 {
-    lumpindex_t i;
-
     // Free the old hash table, if there is one:
-    if (lumphash != NULL)
-    {
-        Z_Free(lumphash);
-    }
+    if (lumphash != nullptr)
+         Z_Free(lumphash);
 
     // Generate hash table
     if (numlumps > 0)
     {
-        lumphash = zmalloc<decltype(lumphash)>(sizeof(lumpindex_t) * numlumps, PU_STATIC, NULL);
+        lumphash = zmalloc<lumpindex_t*>(sizeof(lumpindex_t) * numlumps, PU_STATIC, nullptr);
+        std::fill_n(lumphash, numlumps, -1);
 
-        for (i = 0; i < numlumps; ++i)
+        for (lumpindex_t i = 0; i < numlumps; ++i)
         {
-            lumphash[i] = -1;
-        }
+            auto hash = HashName(lumpname_to_sv(lumpinfo[i]->name)) % numlumps;
 
-        for (i = 0; i < numlumps; ++i)
-        {
-            unsigned int hash;
-
-            hash = W_LumpNameHash(lumpinfo[i]->name) % numlumps;
-            //printf("%d for %8s\n", hash, lumpinfo[i]->name);
             // Hook into the hash table
-
             lumpinfo[i]->next = lumphash[hash];
             lumphash[hash] = i;
         }
