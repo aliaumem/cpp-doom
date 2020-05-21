@@ -22,7 +22,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <string>
 
 #include "doomtype.hpp"
@@ -74,20 +74,37 @@ static char *reloadname = NULL;
 static int reloadlump = -1;
 
 // Hash function used for lump names.
-unsigned int W_LumpNameHash(const char *s)
+std::string_view lumpname_to_sv(char const *name) {
+  auto len = std::min(8ul, std::strlen(name));
+  return {name, len};
+}
+
+constexpr bool case_insensitive_cmp(std::string_view const& lhs, std::string_view const& rhs)
 {
-    // This is the djb2 string hash function, modded to work on strings
-    // that have a maximum length of 8.
-
-    unsigned int result = 5381;
-    unsigned int i;
-
-    for (i=0; i < 8 && s[i] != '\0'; ++i)
+    if(lhs.size() != rhs.size()) return false;
+    for(size_t i = 0 ; i < lhs.size() ; ++i)
     {
-        result = ((result << 5) ^ result ) ^ toupper(s[i]);
+        if(std::toupper(lhs[i]) != std::toupper(rhs[i]))
+            return false;
     }
+    return true;
+}
 
-    return result;
+unsigned int HashName(std::string_view name) {
+  // This is the djb2 string hash function, modded to work on strings
+  // that have a maximum length of 8.
+
+  unsigned int result = 5381;
+
+  for (auto c : name) {
+    result = ((result << 5) ^ result) ^ std::toupper(c);
+  }
+
+  return result;
+}
+
+unsigned int W_LumpNameHash(const char *s) {
+  return HashName(lumpname_to_sv(s));
 }
 
 //
@@ -261,68 +278,50 @@ int W_NumLumps (void)
 // W_CheckNumForName
 // Returns -1 if name not found.
 //
+lumpindex_t CheckNumForName(std::string_view name) {
+  lumpindex_t i;
 
-lumpindex_t W_CheckNumForName(const char *name)
-{
-    lumpindex_t i;
+  // Do we have a hash table yet?
 
-    // Do we have a hash table yet?
+  if (lumphash != NULL) {
+    // We do! Excellent.
 
-    if (lumphash != NULL)
-    {
-        int hash;
+    auto hash = HashName(name) % numlumps;
 
-        // We do! Excellent.
-
-        hash = W_LumpNameHash(name) % numlumps;
-
-        for (i = lumphash[hash]; i != -1; i = lumpinfo[i]->next)
-        {
-            if (!strncasecmp(lumpinfo[i]->name, name, 8))
-            {
-                return i;
-            }
-        }
+    for (i = lumphash[hash]; i != -1; i = lumpinfo[i]->next) {
+      if (case_insensitive_cmp(lumpname_to_sv(lumpinfo[i]->name), name)) {
+        return i;
+      }
     }
-    else
-    {
-        // We don't have a hash table generate yet. Linear search :-(
-        //
-        // scan backwards so patch lump files take precedence
+  } else {
+    // We don't have a hash table generate yet. Linear search :-(
+    // scan backwards so patch lump files take precedence
 
-        for (i = numlumps - 1; i >= 0; --i)
-        {
-            if (!strncasecmp(lumpinfo[i]->name, name, 8))
-            {
-                return i;
-            }
-        }
+    for (i = numlumps - 1; i >= 0; --i) {
+      if (case_insensitive_cmp(lumpname_to_sv(lumpinfo[i]->name), name)) {
+        return i;
+      }
     }
+  }
 
-    // TFB. Not found.
-
-    return -1;
+  return -1;
 }
 
-
-
+lumpindex_t W_CheckNumForName(const char *name) {
+    return CheckNumForName(lumpname_to_sv(name));
+}
 
 //
 // W_GetNumForName
 // Calls W_CheckNumForName, but bombs out if not found.
 //
-lumpindex_t W_GetNumForName(const char *name)
-{
-    lumpindex_t i;
+lumpindex_t W_GetNumForName(const char *name) {
+  lumpindex_t i = CheckNumForName(lumpname_to_sv(name));
 
-    i = W_CheckNumForName (name);
+  if (i < 0)
+    I_Error("W_GetNumForName: %s not found!", name);
 
-    if (i < 0)
-    {
-        I_Error ("W_GetNumForName: %s not found!", name);
-    }
-
-    return i;
+  return i;
 }
 
 lumpindex_t W_CheckNumForNameFromTo(const char *name, int from, int to)
