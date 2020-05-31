@@ -31,7 +31,7 @@
 // ZONE MEMORY
 // PU - purge tags.
 
-enum
+enum purge_tags
 {
     PU_STATIC = 1,                  // static entire execution time
     PU_SOUND,                       // static while playing
@@ -52,14 +52,14 @@ enum
         
 
 void	Z_Init (void);
-void	Z_InitMem (std::byte* memory_zone, int size);
-void*	Z_Malloc (int size, int tag, void *ptr);
+void	Z_InitMem (std::byte* memory_zone, size_t size);
+void*	Z_Malloc (int size, purge_tags tag, void *ptr);
 void    Z_Free (void *ptr);
 void    Z_FreeTags (int lowtag, int hightag);
 void    Z_DumpHeap (int lowtag, int hightag);
 void    Z_FileDumpHeap (FILE *f);
 void    Z_CheckHeap (void);
-void    Z_ChangeTag2 (void *ptr, int tag, const char *file, int line);
+void    Z_ChangeTag2 (void *ptr, purge_tags tag, const char *file, int line);
 void    Z_ChangeUser(void *ptr, void **user);
 int     Z_FreeMemory (void);
 unsigned int Z_ZoneSize(void);

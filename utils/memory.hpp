@@ -19,13 +19,13 @@ template <typename DataType> auto create_struct(const std::size_t size) {
 }
 
 template<typename DataType>
-auto zmalloc(size_t size, int tag, void *ptr)
+auto zmalloc(size_t size, purge_tags tag, void *ptr)
 {
   return static_cast<DataType>(Z_Malloc(static_cast<int>(size), tag, ptr));
 }
 
 template <typename DataType>
-auto zmalloc_one(int tag, void* ptr = nullptr)
+auto zmalloc_one(purge_tags tag, void* ptr = nullptr)
 {
     return static_cast<DataType*>(Z_Malloc(sizeof(DataType), tag, ptr));
 }

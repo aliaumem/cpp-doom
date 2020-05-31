@@ -424,13 +424,13 @@ void *W_CacheLumpNum(lumpindex_t lumpnum, int tag)
         // Already cached, so just switch the zone tag.
         RecordAlreadyCached(lump->name, lumpnum, tag);
         result = lump->cache;
-        Z_ChangeTag(lump->cache, tag);
+        Z_ChangeTag(lump->cache, static_cast<purge_tags>(tag));
     }
     else
     {
         // Not yet loaded, so load it now
         RecordCacheRequest(lump->name, lumpnum, tag);
-        lump->cache = zmalloc<decltype(lump->cache)>(W_LumpLength(lumpnum), tag, &lump->cache);
+        lump->cache = zmalloc<decltype(lump->cache)>(W_LumpLength(lumpnum), static_cast<purge_tags>(tag), &lump->cache);
 	W_ReadLump (lumpnum, lump->cache);
         result = lump->cache;
     }
