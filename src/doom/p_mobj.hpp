@@ -206,6 +206,8 @@ enum mobjflag_t
 struct mobj_t final : mobj_thinker
 {
     void perform() final;
+    void* padding;
+
     // Info for drawing: position.
     fixed_t		x;
     fixed_t		y;

@@ -105,6 +105,7 @@ struct basic_light {
   sector_t *sector;
   int maxlight;
   int minlight;
+  void* padding;
 };
 
 struct fireflicker_t final : mobj_thinker, basic_light {
@@ -275,6 +276,7 @@ extern void T_PlatRaise(plat_t *);
 struct plat_t : movable_obj {
   plat_t(bool is_moving = true) : movable_obj(is_moving) {}
 
+  void* padding;
   sector_t *sector;
   fixed_t speed;
   fixed_t low;
@@ -325,6 +327,7 @@ struct vldoor_t;
 extern void T_VerticalDoor(vldoor_t *);
 
 struct vldoor_t final : mobj_thinker {
+    void* padding;
   vldoor_e type;
   sector_t *sector;
   fixed_t topheight;
@@ -457,6 +460,7 @@ extern void T_MoveCeiling(ceiling_t *);
 struct ceiling_t : movable_obj {
   ceiling_t(bool is_moving = true) : movable_obj(is_moving) {}
 
+    void* padding;
   ceiling_e type;
   sector_t *sector;
   fixed_t bottomheight;
@@ -538,6 +542,7 @@ extern void T_MoveFloor(floormove_t *);
 struct floormove_t final : mobj_thinker {
   floormove_t(bool do_goobers = false) : do_goobers{do_goobers} {}
 
+  void* padding;
   floor_e type;
   boolean crush;
   sector_t *sector;

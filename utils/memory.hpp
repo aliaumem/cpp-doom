@@ -37,6 +37,13 @@ auto znew(Args... args)
     return new (ptr) DataType{std::forward<Args>(args)...};
 }
 
+template <typename DataType, typename ... Args>
+auto znewLevel(Args... args)
+{
+    auto* ptr = zmalloc_one<DataType>(PU_LEVEL);
+    return new (ptr) DataType{std::forward<Args>(args)...};
+}
+
 template <typename DataType>
 void zdelete(DataType* value)
 {

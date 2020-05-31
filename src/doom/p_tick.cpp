@@ -44,10 +44,17 @@ void P_RunThinkers(void) {
 }
 
 void thinker_list::run() {
-  clear_removed();
+  // TODO re-enable this
+  // clear_removed();
 
-  for (auto *currentthinker : thinkers) {
-    currentthinker->perform();
+  auto it = thinkers.begin();
+  while (it != thinkers.end()) {
+    if ((*it)->needs_removal()) {
+      Z_Free(*it);
+      thinkers.erase(it++);
+    } else {
+      (*it++)->perform();
+    }
   }
 }
 

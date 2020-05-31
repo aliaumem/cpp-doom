@@ -90,10 +90,13 @@ struct line_t;
 struct degenmobj_t
 {
     bool		is_set;
+    void* padding1, *padding2;
     fixed_t		x;
     fixed_t		y;
     fixed_t		z;
 };
+
+static_assert(sizeof(degenmobj_t) == 40);
 
 //
 // The SECTORS record, at runtime.

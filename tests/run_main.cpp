@@ -1,4 +1,5 @@
 #include "lump_testing.hpp"
+#include "zone_testing.hpp"
 #include "ApprovalTests.hpp"
 #include "catch2/catch.hpp"
 
@@ -36,7 +37,8 @@ TEST_CASE("Launch_Doom_Main")
         {
             RunDoomMain(demo);
 
-            Approvals::verify(doom::testing_utils::lump_ops);
+            Approvals::verifyWithExtension(doom::testing_utils::lump_ops, ".lumps");
+            Approvals::verifyWithExtension(doom::testing_utils::heap_state, ".heap");
         }
     }
 }

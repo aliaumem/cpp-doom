@@ -23,6 +23,7 @@
 #include "m_argv.hpp"
 
 #include "z_zone.hpp"
+#include "z_zone_ext.h"
 
 
 //
@@ -142,6 +143,9 @@ void Z_InitMem(std::byte* memory_zone, int size)
     // heap is scanned to look for remaining pointers to the freed block.
     //
     scan_on_free = M_ParmExists("-zonescan");
+
+    RecordHeapMetadata(reinterpret_cast<char *>(&mainzone->blocklist),
+                       mainzone->size);
 }
 
 // Scan the zone heap for pointers within the specified range, and warn about
@@ -193,9 +197,11 @@ void Z_Free (void* ptr)
 
     if (block->id != ZONEID)
     {
-        Z_DumpHeap(PU_STATIC, PU_NUM_TAGS);
+        //Z_DumpHeap(PU_STATIC, PU_NUM_TAGS);
 	I_Error ("Z_Free: freed a pointer without ZONEID (%p)", block);
     }
+
+    RecordZFree(ptr);
 
     if (block->tag != PU_FREE && block->user != NULL)
     {
@@ -368,6 +374,8 @@ Z_Malloc
     mainzone->rover = base->next;	
 	
     base->id = ZONEID;
+
+    RecordZMalloc(size, tag, reinterpret_cast<void**>(user), result);
    
     return result;
 }
@@ -407,42 +415,34 @@ Z_FreeTags
 // Z_DumpHeap
 // Note: TFileDumpHeap( stdout ) ?
 //
-void
-Z_DumpHeap
-( int		lowtag,
-  int		hightag )
-{
-    memblock_t*	block;
-	
-    printf ("zone size: %i  location: %p\n",
-	    mainzone->size,mainzone);
-    
-    printf ("tag range: %i to %i\n",
-	    lowtag, hightag);
-	
-    for (block = mainzone->blocklist.next ; ; block = block->next)
-    {
-	if (block->tag >= lowtag && block->tag <= hightag)
-	    printf ("block:%p    size:%7i    user:%p    tag:%3i id:%p\n",
-		    block, block->size, block->user, block->tag, block->id);
-		
-	if (block->next == &mainzone->blocklist)
-	{
-	    // all blocks have been hit
-	    break;
-	}
-	
-	if ( (byte *)block + block->size != (byte *)block->next)
-	    printf ("ERROR: block size does not touch the next block\n");
+void Z_DumpHeap(int lowtag, int hightag) {
+  memblock_t *block;
 
-	if ( block->next->prev != block)
-	    printf ("ERROR: next block doesn't have proper back link\n");
+  printf("zone size: %i  location: %p\n", mainzone->size, mainzone);
 
-	if (block->tag == PU_FREE && block->next->tag == PU_FREE)
-	    printf ("ERROR: two consecutive free blocks\n");
+  printf("tag range: %i to %i\n", lowtag, hightag);
+
+  for (block = mainzone->blocklist.next;; block = block->next) {
+    if (block->tag >= lowtag && block->tag <= hightag)
+      printf("block:%p    size:%7i    user:%p    tag:%3i id:%p\n", block,
+             block->size, block->user, block->tag, block->id);
+    RecordHeapBlock(block, block->size, block->user, block->tag);
+
+    if (block->next == &mainzone->blocklist) {
+      // all blocks have been hit
+      break;
     }
-}
 
+    if ((byte *)block + block->size != (byte *)block->next)
+      printf("ERROR: block size does not touch the next block\n");
+
+    if (block->next->prev != block)
+      printf("ERROR: next block doesn't have proper back link\n");
+
+    if (block->tag == PU_FREE && block->next->tag == PU_FREE)
+      printf("ERROR: two consecutive free blocks\n");
+  }
+}
 
 //
 // Z_FileDumpHeap
@@ -524,6 +524,8 @@ void Z_ChangeTag2(void *ptr, int tag, const char *file, int line)
                 "for purgable blocks", file, line);
 
     block->tag = tag;
+
+    RecordChangeTag(ptr, tag);
 }
 
 void Z_ChangeUser(void *ptr, void **user)
@@ -539,6 +541,8 @@ void Z_ChangeUser(void *ptr, void **user)
 
     block->user = user;
     *user = ptr;
+
+    RecordChangeUser(ptr, user);
 }
 
 

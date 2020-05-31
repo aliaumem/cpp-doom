@@ -54,6 +54,8 @@ END_EXTERN
 struct lump_guard{
     ~lump_guard()
     {
+#ifdef CRISPY_DOOM
+#endif
         lumphash = nullptr;
         free(lumpinfo);
         lumpinfo = nullptr;

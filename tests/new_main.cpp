@@ -392,5 +392,6 @@ void new_loop ()
     catch(std::runtime_error&)
     {
         // let's get out gracefully
+        Z_DumpHeap(1, PU_NUM_TAGS);
     }
 }

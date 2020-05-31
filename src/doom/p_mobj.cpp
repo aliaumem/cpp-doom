@@ -631,7 +631,7 @@ P_SpawnMobjSafe
     state_t*	st;
     mobjinfo_t*	info;
 	
-    mobj_t* mobj = znew<mobj_t>();
+    mobj_t* mobj = znewLevel<mobj_t>();
     //memset (mobj, 0, sizeof (*mobj));
     //new (mobj) mobj_t();
     info = &mobjinfo[type];
