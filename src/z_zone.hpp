@@ -57,7 +57,6 @@ void*	Z_Malloc (int size, purge_tags tag, void *ptr);
 void    Z_Free (void *ptr);
 void    Z_FreeTags (purge_tags lowtag, purge_tags hightag);
 void    Z_DumpHeap (int lowtag, int hightag);
-void    Z_FileDumpHeap (FILE *f);
 void    Z_CheckHeap (void);
 void    Z_ChangeTag2 (void *ptr, purge_tags tag, const char *file, int line);
 void    Z_ChangeUser(void *ptr, void **user);

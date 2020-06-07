@@ -79,9 +79,11 @@ struct memblock_t {
     [[nodiscard]] bool is_purgeable() const { return is_purgeable(tag); }
     [[nodiscard]] bool has_user() const { return user != nullptr; }
     [[nodiscard]] bool is_valid() const { return id == ZONEID; }
-    [[nodiscard]] bool can_allocate(size_t size) { return is_free() && this->size >= size; }
-    [[nodiscard]] bool is_tag_between(purge_tags lowtag, purge_tags hightag)
-    { return tag >= lowtag && tag <= hightag; }
+    [[nodiscard]] bool can_allocate(size_t size) const { return is_free() && this->size >= size; }
+    [[nodiscard]] bool is_tag_between(purge_tags lowtag, purge_tags hightag) const
+    {
+        return tag >= lowtag && tag <= hightag;
+    }
 
     void merge_with(memblock_t* other)
     {
@@ -99,12 +101,14 @@ struct memblock_t {
         id = 0;
     }
 
+    void change_user(void** new_user);
+
     [[nodiscard]] void* content() { return const_cast<std::byte*>(reinterpret_cast<std::byte const*>(this) + sizeof(memblock_t)); };
     [[nodiscard]] size_t      content_size() const { return size - sizeof(memblock_t); }
 };
 
 struct memzone_t {
-    memzone_t(size_t size)
+    explicit memzone_t(size_t size)
         : size { size }
         , blocklist { size - sizeof(memzone_t),
             PU_STATIC, reinterpret_cast<void**>(
@@ -114,7 +118,7 @@ struct memzone_t {
         auto* firstBlock = new (reinterpret_cast<char*>(this) + sizeof(memzone_t))
             memblock_t { size - sizeof(memzone_t), PU_FREE, &blocklist, &blocklist };
         blocklist.prev = blocklist.next = firstBlock;
-        rover = {firstBlock};
+        rover = iterator{firstBlock};
     }
 
     class iterator {
@@ -124,7 +128,7 @@ struct memzone_t {
         using pointer           = memblock_t*;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        iterator(memblock_t* block)
+        explicit iterator(memblock_t* block)
                 : m_block(block)
         {
         }
@@ -141,8 +145,8 @@ struct memzone_t {
             return *this;
         }
 
-        iterator next() const { return m_block->next; }
-        iterator prev() const { return m_block->prev; }
+        [[nodiscard]] iterator next() const { return iterator{m_block->next}; }
+        [[nodiscard]] iterator prev() const { return iterator{m_block->prev}; }
 
         pointer   operator->() { return m_block; }
         reference operator*() { return m_block; }
@@ -155,7 +159,7 @@ struct memzone_t {
 
     static iterator iterator_at(void* ptr)
     {
-        return { reinterpret_cast<memblock_t*>(reinterpret_cast<std::byte*>(ptr) - sizeof(memblock_t)) };
+        return iterator{ reinterpret_cast<memblock_t*>(reinterpret_cast<std::byte*>(ptr) - sizeof(memblock_t)) };
     }
 
     void clear() { *this = memzone_t{size}; }
@@ -164,8 +168,8 @@ struct memzone_t {
     void* allocate(size_t size, purge_tags tag, void* user);
     void free_tags(purge_tags lowtag, purge_tags hightag);
 
-    iterator begin() { return {blocklist.next}; }
-    iterator end() { return {&blocklist}; }
+    [[nodiscard]] iterator begin() { return iterator {blocklist.next}; }
+    [[nodiscard]] iterator end() { return iterator{&blocklist}; }
 
     // total bytes malloced, including header
     size_t size;
@@ -177,6 +181,8 @@ struct memzone_t {
 };
 
 struct memory_resource {
+    static void init(std::byte* zone, std::size_t size);
+
     memory_resource() noexcept
     : mainzone(nullptr)
     {}
@@ -187,7 +193,6 @@ struct memory_resource {
 
     auto begin() { return mainzone->begin(); }
     auto end() { return mainzone->end(); }
-    auto& rover() { return mainzone->rover; }
 
     memzone_t* operator ->() const { return mainzone; }
 
@@ -212,16 +217,14 @@ void Z_ClearZone (memzone_t* zone)
 //
 // Z_Init
 //
-void Z_InitMem(std::byte* memory_zone, size_t size);
-
 void Z_Init () {
     int size;
-    std::byte* memory_zone = reinterpret_cast<std::byte*>(I_ZoneBase(&size));
-    Z_InitMem(memory_zone, size);
+    auto* memory_zone = reinterpret_cast<std::byte*>(I_ZoneBase(&size));
+    memory_resource::init(memory_zone, size);
 }
-void Z_InitMem(std::byte* memory_zone, size_t size)
+void memory_resource::init(std::byte *zone, std::size_t size)
 {
-    mem_res = memory_resource(memory_zone, size);
+    mem_res = memory_resource(zone, size);
 
     // [Deliberately undocumented]
     // Zone memory debugging flag. If set, memory is zeroed after it is freed
@@ -429,10 +432,10 @@ Z_FreeTags
 
 void memzone_t::free_tags(purge_tags lowtag, purge_tags hightag)
 {
-    for (auto block : *this)
+    for(auto* block : *this)
     {
         if (!block->is_free() && block->is_tag_between(lowtag, hightag))
-            mem_res->free_block(block);
+            free_block(iterator_at(block));
     }
 }
 
@@ -458,49 +461,16 @@ void Z_DumpHeap(int lowtag, int hightag) {
       break;
     }
 
-    if (reinterpret_cast<byte *>(*block) + block->size != (byte *)block->next)
+    if (reinterpret_cast<byte *>(*block) + block->size != reinterpret_cast<byte*>(*(block.next())))
       printf("ERROR: block size does not touch the next block\n");
 
-    if (block->next->prev != block)
+    if (block.next().prev() != block)
       printf("ERROR: next block doesn't have proper back link\n");
 
-    if (block->tag == PU_FREE && block->next->tag == PU_FREE)
+    if (block->is_free() && block.next()->is_free())
       printf("ERROR: two consecutive free blocks\n");
   }
 }
-
-//
-// Z_FileDumpHeap
-//
-void Z_FileDumpHeap (FILE* f)
-{
-    memblock_t*	block;
-
-    fprintf (f,"zone size: %i  location: %p\n",mem_res->size,mem_res.operator->());
-
-    for (block = mem_res->blocklist.next ; ; block = block->next)
-    {
-	fprintf (f,"block:%p    size:%7i    user:%p    tag:%3i\n",
-		 block, block->size, block->user, block->tag);
-
-	if (block->next == &mem_res->blocklist)
-	{
-	    // all blocks have been hit
-	    break;
-	}
-
-	if ( (byte *)block + block->size != (byte *)block->next)
-	    fprintf (f,"ERROR: block size does not touch the next block\n");
-
-	if ( block->next->prev != block)
-	    fprintf (f,"ERROR: next block doesn't have proper back link\n");
-
-	if (block->tag == PU_FREE && block->next->tag == PU_FREE)
-	    fprintf (f,"ERROR: two consecutive free blocks\n");
-    }
-}
-
-
 
 //
 // Z_CheckHeap
@@ -549,17 +519,19 @@ void Z_ChangeTag2(void *ptr, purge_tags tag, const char *file, int line)
     RecordChangeTag(ptr, tag);
 }
 
-void Z_ChangeUser(void *ptr, void **user)
-{
+void Z_ChangeUser(void *ptr, void **user) {
     auto block = memzone_t::iterator_at(ptr);
+    block->change_user(user);
+}
 
-    if (!block->is_valid())
+void memblock_t::change_user(void **new_user) {
+    if (!is_valid())
         I_Error("Z_ChangeUser: Tried to change user for invalid block!");
 
-    block->user = user;
-    *user = ptr;
+    user = new_user;
+    *user = content();
 
-    RecordChangeUser(ptr, user);
+    RecordChangeUser(content(), user);
 }
 
 
