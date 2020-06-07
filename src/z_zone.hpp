@@ -61,8 +61,8 @@ void    Z_FileDumpHeap (FILE *f);
 void    Z_CheckHeap (void);
 void    Z_ChangeTag2 (void *ptr, purge_tags tag, const char *file, int line);
 void    Z_ChangeUser(void *ptr, void **user);
-int     Z_FreeMemory (void);
-unsigned int Z_ZoneSize(void);
+size_t Z_FreeMemory ();
+size_t Z_ZoneSize();
 
 //
 // This is used to get the local FILE:LINE info from CPP
