@@ -101,7 +101,10 @@ set(GAME_SOURCE_FILES
     w_file_posix.cpp
     w_file_win32.cpp
     w_merge.cpp           w_merge.hpp
-    z_zone.cpp            z_zone.hpp)
+    z_zone.cpp            z_zone.hpp
+    zone/memzone.cpp      zone/memzone.hpp
+    zone/memblock.cpp     zone/memblock.hpp
+        )
 
 set(GAME_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/../" "${CMAKE_CURRENT_SOURCE_DIR}/doom")
 

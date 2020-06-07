@@ -26,6 +26,8 @@
 #include "z_zone.hpp"
 #include "z_zone_ext.h"
 
+#include "zone/memzone.hpp"
+
 #include <new>
 #include <iterator>
 
@@ -40,169 +42,7 @@
 //  because it will get overwritten automatically if needed.
 //
 
-static constexpr auto const ZONEID = 0x1d4a11;
-static constexpr auto const MINFRAGMENT	= 64;
-
-struct memblock_t {
-    memblock_t(size_t size, purge_tags tag, memblock_t* prev, memblock_t* next,
-        void** user = nullptr)
-        : size { static_cast<int>(size) }
-        , user { user }
-        , tag { tag }
-        , id { ZONEID }
-        , next { next }
-        , prev { prev }
-    {
-        next->prev = this;
-        prev->next = this;
-    }
-
-    memblock_t(size_t size, purge_tags tag, void** user)
-        : size { static_cast<int>(size) }
-        , user { user }
-        , tag { tag }
-        , id { ZONEID }
-        , next { nullptr }
-        , prev { nullptr }
-    {
-    }
-
-    int         size; // including the header and possibly tiny fragments
-    void**      user;
-    purge_tags  tag; // PU_FREE if this is free
-    int         id;  // should be ZONEID
-    memblock_t* next;
-    memblock_t* prev;
-
-    [[nodiscard]] bool is_free() const { return tag == purge_tags::PU_FREE; }
-    [[nodiscard]] bool static is_purgeable(purge_tags tag) { return tag >= PU_PURGELEVEL; }
-    [[nodiscard]] bool is_purgeable() const { return is_purgeable(tag); }
-    [[nodiscard]] bool has_user() const { return user != nullptr; }
-    [[nodiscard]] bool is_valid() const { return id == ZONEID; }
-    [[nodiscard]] bool can_allocate(size_t size) const { return is_free() && this->size >= size; }
-    [[nodiscard]] bool is_tag_between(purge_tags lowtag, purge_tags hightag) const
-    {
-        return tag >= lowtag && tag <= hightag;
-    }
-
-    void merge_with(memblock_t* other)
-    {
-        size += other->size;
-        next = other->next;
-        next->prev = this;
-
-        other->~memblock_t();
-    }
-
-    void mark_as_free()
-    {
-        tag = PU_FREE;
-        if(user) *user = nullptr;
-        user = nullptr;
-        id = 0;
-    }
-
-    void change_user(void** new_user);
-
-    [[nodiscard]] void* content() { return const_cast<std::byte*>(reinterpret_cast<std::byte const*>(this) + sizeof(memblock_t)); };
-    [[nodiscard]] size_t      content_size() const { return size - sizeof(memblock_t); }
-};
-
-struct memzone_t {
-    explicit memzone_t(size_t size)
-        : size { size }
-        , blocklist { size - sizeof(memzone_t),
-            PU_STATIC, reinterpret_cast<void**>(
-                this) }
-        , rover { nullptr }
-    {
-        auto* firstBlock = new (reinterpret_cast<char*>(this) + sizeof(memzone_t))
-            memblock_t { size - sizeof(memzone_t), PU_FREE, &blocklist, &blocklist };
-        blocklist.prev = blocklist.next = firstBlock;
-        rover = iterator{firstBlock};
-    }
-
-    class iterator {
-    public:
-        using value_type        = memblock_t;
-        using reference         = memblock_t*;
-        using pointer           = memblock_t*;
-        using iterator_category = std::bidirectional_iterator_tag;
-
-        explicit iterator(memblock_t* block)
-                : m_block(block)
-        {
-        }
-
-        iterator& operator++()
-        {
-            m_block = m_block->next;
-            return *this;
-        }
-
-        iterator& operator--()
-        {
-            m_block = m_block->prev;
-            return *this;
-        }
-
-        [[nodiscard]] iterator next() const { return iterator{m_block->next}; }
-        [[nodiscard]] iterator prev() const { return iterator{m_block->prev}; }
-
-        pointer   operator->() { return m_block; }
-        reference operator*() { return m_block; }
-        bool operator==(iterator const& other) const { return m_block == other.m_block; }
-        bool operator!=(iterator const& other) const { return !(*this == other); }
-
-    private:
-        memblock_t* m_block;
-    };
-
-    static iterator iterator_at(void* ptr)
-    {
-        return iterator{ reinterpret_cast<memblock_t*>(reinterpret_cast<std::byte*>(ptr) - sizeof(memblock_t)) };
-    }
-
-    void clear() { *this = memzone_t{size}; }
-
-    void free_block(iterator block);
-    void* allocate(size_t size, purge_tags tag, void* user);
-    void free_tags(purge_tags lowtag, purge_tags hightag);
-
-    [[nodiscard]] iterator begin() { return iterator {blocklist.next}; }
-    [[nodiscard]] iterator end() { return iterator{&blocklist}; }
-
-    // total bytes malloced, including header
-    size_t size;
-
-    // start / end cap for linked list
-    memblock_t blocklist;
-
-    iterator rover;
-};
-
-struct memory_resource {
-    static void init(std::byte* zone, std::size_t size);
-
-    memory_resource() noexcept
-    : mainzone(nullptr)
-    {}
-
-    memory_resource(std::byte* memory_zone, size_t size) noexcept
-            : mainzone(new (memory_zone) memzone_t{size})
-    {}
-
-    auto begin() { return mainzone->begin(); }
-    auto end() { return mainzone->end(); }
-
-    memzone_t* operator ->() const { return mainzone; }
-
-    memzone_t* mainzone;
-    bool zero_on_free = false;
-    bool scan_on_free = false;
-};
-
-static memory_resource mem_res;
+using namespace doom::zone;
 
 //
 // Z_ClearZone
@@ -248,36 +88,6 @@ void Z_InitMem(std::byte* zone, std::size_t size)
 {
     memory_resource::init(zone, size);
 }
-
-// Scan the zone heap for pointers within the specified range, and warn about
-// any remaining pointers.
-static void ScanForBlock(void *start, void *end)
-{
-    for(auto* block : mem_res)
-    {
-        auto tag = block->tag;
-
-        if (tag == PU_STATIC || tag == PU_LEVEL || tag == PU_LEVSPEC)
-        {
-            // Scan for pointers on the assumption that pointers are aligned
-            // on word boundaries (word size depending on pointer size):
-            void** mem = reinterpret_cast<void **>(block->content());
-            auto len = block->content_size() / sizeof(void *);
-
-            for (size_t i = 0; i < len; ++i)
-            {
-                if (start <= mem[i] && mem[i] <= end)
-                {
-                    fprintf(stderr,
-                            "%p has dangling pointer into freed block "
-                            "%p (%p -> %p)\n",
-                            mem, start, &mem[i], mem[i]);
-                }
-            }
-        }
-    }
-}
-
 //
 // Z_Free
 //
@@ -285,48 +95,6 @@ void Z_Free (void* ptr) {
     auto block = memzone_t::iterator_at(ptr);
     mem_res->free_block(block);
 }
-
-void memzone_t::free_block(iterator block)
-{
-    if (!block->is_valid())
-    {
-        Z_DumpHeap(PU_STATIC, PU_NUM_TAGS);
-        I_Error ("Z_Free: freed a pointer without ZONEID (%p)", *block);
-    }
-
-
-    RecordZFree(block->content());
-
-    block->mark_as_free();
-
-    // If the -zonezero flag is provided, we zero out the block on free
-    // to break code that depends on reading freed memory.
-    if (mem_res.zero_on_free)
-        memset(block->content(), 0, block->size - sizeof(memblock_t));
-
-    if (mem_res.scan_on_free)
-        ScanForBlock(block->content(), reinterpret_cast<std::byte*>(block->content()) + block->content_size());
-
-    if (auto previous = block.prev(); previous->is_free())
-    {
-        // merge with previous free block
-        previous->merge_with(*block);
-
-        if (rover == block) --rover;
-
-        --block;
-    }
-
-    if (auto next = block.next(); next->is_free())
-    {
-        // merge the next free block onto the end
-        block->merge_with(*next);
-
-        if (rover == next)
-            ++rover;
-    }
-}
-
 
 //
 // Z_Malloc
@@ -339,98 +107,6 @@ void* Z_Malloc(int size,
     return mem_res->allocate(size, tag, user);
 }
 
-void* memzone_t::allocate(size_t size, purge_tags tag, void* user)
-{
-    constexpr auto const MEM_ALIGN = alignof(void*);
-    size                           = static_cast<int>((size + MEM_ALIGN - 1) & ~(MEM_ALIGN - 1));
-    size += sizeof(memblock_t); // account for size of block header
-
-    // scan through the block list,
-    // looking for the first free block
-    // of sufficient size,
-    // throwing out any purgeable blocks along the way.
-
-
-    // if there is a free block behind the rover,
-    //  back up over them
-    auto base = rover;
-
-    if (base.prev()->is_free())
-        --base;
-
-    auto new_rover = base;
-    auto start = base.prev();
-
-    do
-    {
-        if (new_rover == start)
-        {
-            // scanned all the way around the list
-            I_Error("Z_Malloc: failed on allocation of %i bytes", size);
-
-            // [crispy] allocate another zone twice as big
-            //Z_Init();
-
-            //base  = mem_res.rover();
-            //new_rover = base;
-            //start = base.prev();
-        }
-
-        if (!new_rover->is_free())
-        {
-            if (!new_rover->is_purgeable())
-            {
-                // hit a block that can't be purged, so move base past it
-                ++base;
-                ++new_rover;
-            }
-            else
-            {
-                // the rover can be the base block
-                --base;
-                free_block(new_rover);
-                ++base;
-                ++new_rover;
-            }
-        }
-        else
-            ++new_rover;
-    } while (!base->can_allocate(size));
-
-
-    // found a block big enough
-    std::size_t extra = base->size - size;
-
-    if (extra > MINFRAGMENT)
-    {
-        // there will be a free fragment after the allocated block
-        auto* ptr = reinterpret_cast<std::byte*>(*base) + size;
-        new (ptr) memblock_t { extra, PU_FREE, *base, *(base.next()) };
-
-        base->size = size;
-    }
-
-    if (!user && memblock_t::is_purgeable(tag))
-        I_Error("Z_Malloc: an owner is required for purgeable blocks");
-
-    base->user = reinterpret_cast<void**>(user);
-    base->tag  = tag;
-
-    auto* result = base->content();
-
-    if (base->user)
-        *base->user = result;
-
-    // next allocation will start looking here
-    rover = base.next();
-
-    base->id = ZONEID;
-
-    RecordZMalloc(size, tag, reinterpret_cast<void**>(user), result);
-
-    return result;
-}
-
 //
 // Z_FreeTags
 //
@@ -440,16 +116,6 @@ Z_FreeTags
   purge_tags hightag ) {
     mem_res->free_tags(lowtag, hightag);
 }
-
-void memzone_t::free_tags(purge_tags lowtag, purge_tags hightag)
-{
-    for(auto* block : *this)
-    {
-        if (!block->is_free() && block->is_tag_between(lowtag, hightag))
-            free_block(iterator{block});
-    }
-}
-
 
 //
 // Z_DumpHeap
@@ -519,7 +185,7 @@ void Z_ChangeTag2(void *ptr, purge_tags tag, const char *file, int line)
 
     if (!block->is_valid())
         I_Error("%s:%i: Z_ChangeTag: block without a ZONEID!",
-                file, line);
+            file, line);
 
     if (memblock_t::is_purgeable(tag) && !block->has_user())
         I_Error("%s:%i: Z_ChangeTag: an owner is required "
@@ -534,17 +200,6 @@ void Z_ChangeUser(void *ptr, void **user) {
     auto block = memzone_t::iterator_at(ptr);
     block->change_user(user);
 }
-
-void memblock_t::change_user(void **new_user) {
-    if (!is_valid())
-        I_Error("Z_ChangeUser: Tried to change user for invalid block!");
-
-    user = new_user;
-    *user = content();
-
-    RecordChangeUser(content(), user);
-}
-
 
 
 //
