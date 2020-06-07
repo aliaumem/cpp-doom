@@ -17,8 +17,8 @@
 //
 
 #include <cassert>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
 
 #include "deh_main.hpp"
 #include "dstrings.hpp"
@@ -33,6 +33,8 @@
 #include "g_game.hpp"
 #include "m_misc.hpp"
 #include "r_state.hpp"
+
+#include <algorithm>
 
 FILE *save_stream;
 int savegamelength;

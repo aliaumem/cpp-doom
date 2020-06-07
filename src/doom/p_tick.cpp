@@ -23,6 +23,8 @@
 
 #include "doomstat.hpp"
 
+#include <algorithm>
+
 int leveltime;
 
 //
