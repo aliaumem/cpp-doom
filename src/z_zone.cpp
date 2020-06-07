@@ -49,6 +49,7 @@ struct memblock_t {
         : size { static_cast<int>(size) }
         , user { user }
         , tag { tag }
+        , id { ZONEID }
         , next { next }
         , prev { prev }
     {
@@ -60,6 +61,7 @@ struct memblock_t {
         : size { static_cast<int>(size) }
         , user { user }
         , tag { tag }
+        , id { ZONEID }
         , next { nullptr }
         , prev { nullptr }
     {
@@ -73,10 +75,11 @@ struct memblock_t {
     memblock_t* prev;
 
     [[nodiscard]] bool is_free() const { return tag == purge_tags::PU_FREE; }
-    [[nodiscard]] bool static can_be_purged(purge_tags tag) { return tag >= PU_PURGELEVEL; }
-    [[nodiscard]] bool can_be_purged() const { return can_be_purged(tag); }
+    [[nodiscard]] bool static is_purgeable(purge_tags tag) { return tag >= PU_PURGELEVEL; }
+    [[nodiscard]] bool is_purgeable() const { return is_purgeable(tag); }
     [[nodiscard]] bool has_user() const { return user != nullptr; }
     [[nodiscard]] bool is_valid() const { return id == ZONEID; }
+    [[nodiscard]] bool can_allocate(size_t size) { return is_free() && this->size >= size; }
 
     void merge_with(memblock_t* other)
     {
@@ -111,8 +114,6 @@ struct memzone_t {
         blocklist.prev = blocklist.next = firstBlock;
         rover = {firstBlock};
     }
-
-    class iterator;
 
     class iterator {
     public:
@@ -158,6 +159,7 @@ struct memzone_t {
     void clear() { *this = memzone_t{size}; }
 
     void free_block(iterator block);
+    void* allocate(size_t size, purge_tags tag, void* user);
 
     // total bytes malloced, including header
     size_t size;
@@ -314,96 +316,93 @@ void* Z_Malloc(int size,
     purge_tags     tag,
     void*          user)
 {
+    return mem_res->allocate(size, tag, user);
+}
+
+void* memzone_t::allocate(size_t size, purge_tags tag, void* user)
+{
     constexpr auto const MEM_ALIGN = alignof(void*);
-    size = static_cast<int>((size + MEM_ALIGN - 1) & ~(MEM_ALIGN - 1));
+    size                           = static_cast<int>((size + MEM_ALIGN - 1) & ~(MEM_ALIGN - 1));
     size += sizeof(memblock_t); // account for size of block header
 
     // scan through the block list,
     // looking for the first free block
     // of sufficient size,
-    // throwing out any purgable blocks along the way.
+    // throwing out any purgeable blocks along the way.
 
 
     // if there is a free block behind the rover,
     //  back up over them
-    auto base = mem_res.rover();
+    auto base = rover;
 
     if (base.prev()->is_free())
         --base;
 
-    auto rover = base;
+    auto new_rover = base;
     auto start = base.prev();
 
     do
     {
-        if (rover == start)
+        if (new_rover == start)
         {
             // scanned all the way around the list
-          I_Error ("Z_Malloc: failed on allocation of %i bytes", size);
+            I_Error("Z_Malloc: failed on allocation of %i bytes", size);
 
             // [crispy] allocate another zone twice as big
             //Z_Init();
 
-            base = mem_res.rover();
-            rover = base;
-            start = base.prev();
+            //base  = mem_res.rover();
+            //new_rover = base;
+            //start = base.prev();
         }
 
-        if (!rover->is_free())
+        if (!new_rover->is_free())
         {
-            if (!rover->can_be_purged())
+            if (!new_rover->is_purgeable())
             {
-                // hit a block that can't be purged,
-                // so move base past it
+                // hit a block that can't be purged, so move base past it
                 ++base;
-                ++rover;
+                ++new_rover;
             }
             else
             {
-                // free the rover block (adding the size to base)
-
                 // the rover can be the base block
                 --base;
-                Z_Free (reinterpret_cast<std::byte *>(*rover) + sizeof(memblock_t));
+                free_block(new_rover);
                 ++base;
-                ++rover;
+                ++new_rover;
             }
         }
         else
-        {
-            ++rover;
-        }
-
-    } while (!base->is_free() || base->size < size);
+            ++new_rover;
+    } while (!base->can_allocate(size));
 
 
     // found a block big enough
     std::size_t extra = base->size - size;
 
-    if (extra >  MINFRAGMENT)
+    if (extra > MINFRAGMENT)
     {
         // there will be a free fragment after the allocated block
-        auto* ptr = reinterpret_cast<std::byte *>(*base) + size ;
-        new (ptr) memblock_t{extra, PU_FREE, *base, *(base.next())};
+        auto* ptr = reinterpret_cast<std::byte*>(*base) + size;
+        new (ptr) memblock_t { extra, PU_FREE, *base, *(base.next()) };
 
         base->size = size;
     }
 
-	if (user == nullptr && tag >= PU_PURGELEVEL)
-	    I_Error ("Z_Malloc: an owner is required for purgable blocks");
+    if (!user && memblock_t::is_purgeable(tag))
+        I_Error("Z_Malloc: an owner is required for purgeable blocks");
 
-    base->user = reinterpret_cast<void **>(user);
-    base->tag = tag;
+    base->user = reinterpret_cast<void**>(user);
+    base->tag  = tag;
 
-    auto* result  = base->content();
+    auto* result = base->content();
 
     if (base->user)
-    {
         *base->user = result;
-    }
 
     // next allocation will start looking here
-    mem_res.rover() = base.next();
+    rover = base.next();
 
     base->id = ZONEID;
 
@@ -411,7 +410,6 @@ void* Z_Malloc(int size,
 
     return result;
 }
-
 
 
 //
@@ -543,9 +541,9 @@ void Z_ChangeTag2(void *ptr, purge_tags tag, const char *file, int line)
         I_Error("%s:%i: Z_ChangeTag: block without a ZONEID!",
                 file, line);
 
-    if (memblock_t::can_be_purged(tag) && !block->has_user())
+    if (memblock_t::is_purgeable(tag) && !block->has_user())
         I_Error("%s:%i: Z_ChangeTag: an owner is required "
-                "for purgable blocks", file, line);
+                "for purgeable blocks", file, line);
 
     block->tag = tag;
 
@@ -576,7 +574,7 @@ size_t Z_FreeMemory ()
 
     for (auto block : mem_res)
     {
-        if (block->is_free() || block->can_be_purged())
+        if (block->is_free() || block->is_purgeable())
             free += block->size;
     }
 
