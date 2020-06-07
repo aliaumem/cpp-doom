@@ -55,7 +55,7 @@ void	Z_Init (void);
 void	Z_InitMem (std::byte* memory_zone, size_t size);
 void*	Z_Malloc (int size, purge_tags tag, void *ptr);
 void    Z_Free (void *ptr);
-void    Z_FreeTags (int lowtag, int hightag);
+void    Z_FreeTags (purge_tags lowtag, purge_tags hightag);
 void    Z_DumpHeap (int lowtag, int hightag);
 void    Z_FileDumpHeap (FILE *f);
 void    Z_CheckHeap (void);

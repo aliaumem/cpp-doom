@@ -80,6 +80,8 @@ struct memblock_t {
     [[nodiscard]] bool has_user() const { return user != nullptr; }
     [[nodiscard]] bool is_valid() const { return id == ZONEID; }
     [[nodiscard]] bool can_allocate(size_t size) { return is_free() && this->size >= size; }
+    [[nodiscard]] bool is_tag_between(purge_tags lowtag, purge_tags hightag)
+    { return tag >= lowtag && tag <= hightag; }
 
     void merge_with(memblock_t* other)
     {
@@ -160,6 +162,10 @@ struct memzone_t {
 
     void free_block(iterator block);
     void* allocate(size_t size, purge_tags tag, void* user);
+    void free_tags(purge_tags lowtag, purge_tags hightag);
+
+    iterator begin() { return {blocklist.next}; }
+    iterator end() { return {&blocklist}; }
 
     // total bytes malloced, including header
     size_t size;
@@ -179,8 +185,8 @@ struct memory_resource {
             : mainzone(new (memory_zone) memzone_t{size})
     {}
 
-    auto begin() -> memzone_t::iterator { return {mainzone->blocklist.next}; }
-    auto end() -> memzone_t::iterator { return {&mainzone->blocklist}; }
+    auto begin() { return mainzone->begin(); }
+    auto end() { return mainzone->end(); }
     auto& rover() { return mainzone->rover; }
 
     memzone_t* operator ->() const { return mainzone; }
@@ -411,31 +417,24 @@ void* memzone_t::allocate(size_t size, purge_tags tag, void* user)
     return result;
 }
 
-
 //
 // Z_FreeTags
 //
 void
 Z_FreeTags
-( int		lowtag,
-  int		hightag )
-{
-    for (auto block = mem_res.begin(), next = mem_res.begin() ;
-	 block != mem_res.end() ;
-	 block = next)
-    {
-	// get link before freeing
-	next = block.next();
-
-	// free block?
-	if (block->tag == PU_FREE)
-	    continue;
-
-	if (block->tag >= lowtag && block->tag <= hightag)
-	    Z_Free (block->content());
-    }
+( purge_tags lowtag,
+  purge_tags hightag ) {
+    mem_res->free_tags(lowtag, hightag);
 }
 
+void memzone_t::free_tags(purge_tags lowtag, purge_tags hightag)
+{
+    for (auto block : *this)
+    {
+        if (!block->is_free() && block->is_tag_between(lowtag, hightag))
+            mem_res->free_block(block);
+    }
+}
 
 
 //

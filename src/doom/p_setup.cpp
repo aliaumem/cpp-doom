@@ -1140,7 +1140,7 @@ P_SetupLevel
     }
     musinfo.from_savegame = false;
 
-    Z_FreeTags (PU_LEVEL, PU_PURGELEVEL-1);
+    Z_FreeTags (PU_LEVEL, static_cast<purge_tags>(PU_PURGELEVEL-1));
 
     // UNUSED W_Profile ();
     thinker_list::instance = {};
