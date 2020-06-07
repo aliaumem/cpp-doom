@@ -97,6 +97,7 @@ struct memblock_t {
     void mark_as_free()
     {
         tag = PU_FREE;
+        if(user) *user = nullptr;
         user = nullptr;
         id = 0;
     }
@@ -222,6 +223,7 @@ void Z_Init () {
     auto* memory_zone = reinterpret_cast<std::byte*>(I_ZoneBase(&size));
     memory_resource::init(memory_zone, size);
 }
+
 void memory_resource::init(std::byte *zone, std::size_t size)
 {
     mem_res = memory_resource(zone, size);
@@ -240,6 +242,11 @@ void memory_resource::init(std::byte *zone, std::size_t size)
 
     RecordHeapMetadata(reinterpret_cast<char *>(&mem_res->blocklist),
                        mem_res->size);
+}
+
+void Z_InitMem(std::byte* zone, std::size_t size)
+{
+    memory_resource::init(zone, size);
 }
 
 // Scan the zone heap for pointers within the specified range, and warn about
@@ -282,7 +289,11 @@ void Z_Free (void* ptr) {
 void memzone_t::free_block(iterator block)
 {
     if (!block->is_valid())
+    {
+        Z_DumpHeap(PU_STATIC, PU_NUM_TAGS);
         I_Error ("Z_Free: freed a pointer without ZONEID (%p)", *block);
+    }
+
 
     RecordZFree(block->content());
 
@@ -435,7 +446,7 @@ void memzone_t::free_tags(purge_tags lowtag, purge_tags hightag)
     for(auto* block : *this)
     {
         if (!block->is_free() && block->is_tag_between(lowtag, hightag))
-            free_block(iterator_at(block));
+            free_block(iterator{block});
     }
 }
 
